@@ -1,0 +1,167 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  /* Kenyan CBC/CBE Rubric Colors */
+  --cbc-ee: 142.1 76.2% 36.3%; /* Exceeding Expectations (Emerald) */
+  --cbc-me: 238.9 83.5% 58.6%; /* Meeting Expectations (Indigo) */
+  --cbc-ae: 37.9 92.1% 50.2%;  /* Approaching Expectations (Amber) */
+  --cbc-be: 346.8 84.2% 49.8%; /* Below Expectations (Crimson/Coral) */
+
+  /* Modern Glassmorphic Colors */
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-bg-hover: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #f8fafc;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(243, 98%, 94%, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(38, 92%, 93%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(200, 90%, 93%, 0.25) 0px, transparent 50%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  /* Elegant Premium Glassmorphism */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 24px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glass-card-hover:hover {
+    background: var(--glass-bg-hover);
+    border-color: rgba(99, 102, 241, 0.25);
+    box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.08);
+    transform: translateY(-4px);
+  }
+
+  .glass-sidebar {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(226, 232, 240, 0.7);
+  }
+
+  /* Custom Glow Accents */
+  .glow-indigo {
+    box-shadow: 0 0 40px -10px rgba(99, 102, 241, 0.15);
+  }
+  
+  .glow-emerald {
+    box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.15);
+  }
+
+  /* Hide scrollbars but keep scrolling */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Premium Glowing Active Border */
+  .active-border-glow::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 20%;
+    height: 60%;
+    width: 4px;
+    background: linear-gradient(180deg, #6366f1, #a855f7);
+    border-radius: 4px 0 0 4px;
+    box-shadow: 0 0 8px #6366f1;
+  }
+}
+
+/* Custom Scrollbar for premium browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 0.6);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8);
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(3deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes float-delayed {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(15px) rotate(-3deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.08); }
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 10s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 12s ease-in-out infinite;
+}
+
+/* Kenyan CBC Expectations Tiers */
+.cbc-badge-ee {
+  background-color: hsla(142.1, 76.2%, 36.3%, 0.1);
+  color: hsl(142.1, 76.2%, 36.3%);
+  border: 1px solid hsla(142.1, 76.2%, 36.3%, 0.2);
+}
+
+.cbc-badge-me {
+  background-color: hsla(238.9, 83.5%, 58.6%, 0.1);
+  color: hsl(238.9, 83.5%, 58.6%);
+  border: 1px solid hsla(238.9, 83.5%, 58.6%, 0.2);
+}
+
+.cbc-badge-ae {
+  background-color: hsla(37.9, 92.1%, 50.2%, 0.1);
+  color: hsl(37.9, 92.1%, 50.2%);
+  border: 1px solid hsla(37.9, 92.1%, 50.2%, 0.2);
+}
+
+.cbc-badge-be {
+  background-color: hsla(346.8, 84.2%, 49.8%, 0.1);
+  color: hsl(346.8, 84.2%, 49.8%);
+  border: 1px solid hsla(346.8, 84.2%, 49.8%, 0.2);
+}
