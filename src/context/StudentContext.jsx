@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../lib/api';
+import { useAuth } from './AuthContext';
 
 const StudentContext = createContext(null);
 
@@ -140,9 +141,9 @@ export function StudentProvider({ children }) {
   const [studentData, setStudentData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { user, login: authLogin, logout: authLogout } = useAuth();
 
-  const token = localStorage.getItem('somobloom_token');
-  const isAuthenticated = !!token;
+  const isAuthenticated = !!user && user.role === 'student';
 
   const fetchStudentData = useCallback(async () => {
     const activeToken = localStorage.getItem('somobloom_token');
@@ -225,24 +226,21 @@ export function StudentProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (user && user.role === 'student') {
       fetchStudentData();
     } else {
       setStudentData(null);
     }
-  }, [isAuthenticated, fetchStudentData]);
+  }, [user, fetchStudentData]);
 
   const login = async (email, password) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Standard production login attempt
-      const response = await api.post('/auth/login', { email, password });
-      localStorage.setItem('somobloom_token', response.token);
+      await authLogin(email, password, 'student');
       await fetchStudentData();
     } catch (err) {
       console.warn('[Offline/Dev Login Bypass] Booting local sandbox credentials.');
-      // If server is unreachable or offline, allow any developer login to enter the Sandbox!
       localStorage.setItem('somobloom_token', 'somobloom_sandbox_mock_token');
       
       const storedSandbox = localStorage.getItem('somobloom_sandbox_data');
@@ -259,8 +257,7 @@ export function StudentProvider({ children }) {
 
   const logout = () => {
     setStudentData(null);
-    localStorage.removeItem('somobloom_token');
-    localStorage.removeItem('somobloom_user');
+    authLogout();
   };
 
   const updateProfile = async (newData) => {

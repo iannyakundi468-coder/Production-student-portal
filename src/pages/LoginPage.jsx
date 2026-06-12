@@ -1,17 +1,27 @@
-import { useState } from 'react';
-import { useStudent } from '../context/StudentContext';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, ArrowRight, ShieldCheck, Cpu, GraduationCap } from 'lucide-react';
+import { Mail, Lock, ArrowRight, ShieldAlert } from 'lucide-react';
 import SomoBloomLogo from '../components/SomoBloomLogo';
 import AnimatedIntro from '../components/AnimatedIntro';
 
 export default function LoginPage() {
-  const { login, isLoading: isContextLoading } = useStudent();
+  const { login, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState('');
   const [showIntro, setShowIntro] = useState(true);
   const [formData, setFormData] = useState({ email: '', password: '' });
+
+  // If already authenticated, redirect to appropriate page
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'student') navigate('/student');
+      else if (user.role === 'guardian') navigate('/parent');
+      else if (user.role === 'staff') navigate('/teacher');
+      else if (user.role === 'admin') navigate('/admin');
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -25,9 +35,8 @@ export default function LoginPage() {
     setIsLoggingIn(true);
     
     try {
-      // Calls StudentContext login, which automatically switches to Sandbox mode if offline
       await login(formData.email, formData.password);
-      navigate('/student');
+      // Redirect will be handled by the useEffect above
     } catch (err) {
       setError(err.message || 'Login failed. Please verify credentials.');
     } finally {
@@ -35,75 +44,78 @@ export default function LoginPage() {
     }
   };
 
+  const greeting = { title: 'Welcome to SomoBloom', subtitle: 'Sign in to access your portal' };
+
   return (
     <>
       {showIntro && <AnimatedIntro onComplete={() => setShowIntro(false)} />}
       <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden text-slate-800 bg-[#f8fafc] transition-opacity duration-1000 ${showIntro ? 'opacity-0' : 'opacity-100'}`}>
-      
-      {/* Background Neon Glowing Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse-slow" />
-      <div className="absolute bottom-[-10%] right-[-5%] w-80 h-80 bg-violet-500/10 rounded-full blur-3xl animate-pulse-slow delay-3000" />
-      <div className="absolute top-[30%] right-[10%] w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl animate-pulse-slow delay-7000" />
-
-      {/* Floating Geometric Art Blocks for Premium Wow Factor */}
-      <div className="absolute top-[15%] left-[20%] w-12 h-12 bg-indigo-200/20 rounded-2xl border border-indigo-200/10 rotate-12 animate-float hidden md:block" />
-      <div className="absolute bottom-[20%] right-[25%] w-16 h-16 bg-violet-200/25 rounded-full border border-violet-200/10 -rotate-45 animate-float-delayed hidden md:block" />
-
-      <div className="relative z-10 w-full max-w-md">
         
-        {/* Brand Header */}
-        <div className="text-center mb-8 flex flex-col items-center">
-          <div className="inline-flex items-center justify-center p-4 bg-white/70 backdrop-blur-md border border-white/80 rounded-[2rem] shadow-xl mb-5 shadow-indigo-500/5 rotate-3 hover:rotate-0 transition-transform duration-300">
-            <SomoBloomLogo size={60} showText={false} />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight flex items-center gap-1.5 justify-center">
-            Somo<span className="text-indigo-600">Bloom</span>
-          </h1>
-          <p className="text-slate-500 text-sm mt-1.5 font-medium tracking-wide">
-            Kenyan CBC Student Portal
-          </p>
-        </div>
+        {/* Background Neon Glowing Orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-80 h-80 bg-violet-500/10 rounded-full blur-3xl animate-pulse-slow delay-3000" />
+        <div className="absolute top-[30%] right-[10%] w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl animate-pulse-slow delay-7000" />
 
-        {/* Glassmorphic Card Container */}
-        <div className="glass-card p-8 md:p-10 relative overflow-hidden border border-white/60">
-          {/* Shifting Top Decorative Accent Gradient */}
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500" />
+        {/* Floating Geometric Art Blocks */}
+        <div className="absolute top-[15%] left-[20%] w-12 h-12 bg-indigo-200/20 rounded-2xl border border-indigo-200/10 rotate-12 animate-float hidden md:block" />
+        <div className="absolute bottom-[20%] right-[25%] w-16 h-16 bg-violet-200/25 rounded-full border border-violet-200/10 -rotate-45 animate-float-delayed hidden md:block" />
+
+        <div className="relative z-10 w-full max-w-md">
           
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Welcome Back, Learner</h2>
-              <p className="text-slate-500 text-sm mt-1">Sign in to your learning dashboard</p>
+          {/* Brand Header */}
+          <div className="text-center mb-6 flex flex-col items-center">
+            <div className="inline-flex items-center justify-center p-4 bg-white/70 backdrop-blur-md border border-white/80 rounded-[2rem] shadow-xl mb-4 shadow-indigo-500/5 rotate-3 hover:rotate-0 transition-transform duration-300">
+              <SomoBloomLogo size={60} showText={false} />
             </div>
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight flex items-center gap-1.5 justify-center">
+              Somo<span className="text-indigo-600">Bloom</span>
+            </h1>
+            <p className="text-slate-500 text-sm mt-1.5 font-medium tracking-wide">
+              Unified School Management Platform
+            </p>
+          </div>
 
-            {error && (
-              <div className="bg-rose-50 border border-rose-100 text-rose-600 text-xs px-4 py-3 rounded-2xl animate-shake">
-                {error}
+          {/* Card Container */}
+          <div className="bg-white/85 backdrop-blur-md p-8 md:p-10 relative overflow-hidden border border-slate-200/80 rounded-[2.5rem] shadow-2xl">
+            {/* Shifting Top Decorative Accent Gradient */}
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500" />
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              
+
+
+              <div className="text-center my-4">
+                <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight transition-all duration-300">{greeting.title}</h2>
+                <p className="text-slate-500 text-xs mt-1 font-semibold">{greeting.subtitle}</p>
               </div>
-            )}
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 flex items-center gap-2 uppercase tracking-wider pl-1">
-                  <Mail size={12} className="text-indigo-500" /> Email or Phone Number
-                </label>
-                <div className="relative">
+              {error && (
+                <div className="bg-rose-50 border border-rose-100 text-rose-600 text-xs px-4 py-3 rounded-2xl flex items-center gap-2">
+                  <ShieldAlert size={14} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 flex items-center gap-2 uppercase tracking-wider pl-1">
+                    <Mail size={12} className="text-indigo-500" /> Email or Username
+                  </label>
                   <input
                     required
                     name="email"
                     type="text"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="Enter email or +254..."
-                    className="w-full px-5 py-4 bg-white/80 border border-slate-200/80 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium placeholder:text-slate-400"
+                    placeholder="e.g. user@somobloom.com"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200/80 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-semibold placeholder:text-slate-400 text-slate-900"
                   />
                 </div>
-              </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 flex items-center gap-2 uppercase tracking-wider pl-1">
-                  <Lock size={12} className="text-indigo-500" /> Password
-                </label>
-                <div className="relative">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 flex items-center gap-2 uppercase tracking-wider pl-1">
+                    <Lock size={12} className="text-indigo-500" /> Password
+                  </label>
                   <input
                     required
                     name="password"
@@ -111,41 +123,37 @@ export default function LoginPage() {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="••••••••"
-                    className="w-full px-5 py-4 bg-white/80 border border-slate-200/80 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium placeholder:text-slate-400"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200/80 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-semibold placeholder:text-slate-400 text-slate-900"
                   />
                 </div>
               </div>
-            </div>
 
+              <button 
+                type="submit"
+                disabled={isLoggingIn} 
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-550/10 hover:shadow-indigo-550/20 hover:scale-[1.01] flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-60 disabled:pointer-events-none"
+              >
+                {isLoggingIn ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Connecting to Portal...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In to Access</span> 
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
 
-
-            <button 
-              type="submit"
-              disabled={isLoggingIn || isContextLoading} 
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 hover:scale-[1.01] flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-60 disabled:pointer-events-none"
-            >
-              {isLoggingIn || isContextLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Connecting to Portal...</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign In to Learn</span> 
-                  <ArrowRight size={18} />
-                </>
-              )}
-            </button>
-            
-
-          </form>
+            </form>
+          </div>
+          
+          <p className="text-center text-slate-400 text-xs mt-6 font-semibold">
+            SomoBloom School Management System • {new Date().getFullYear()}
+          </p>
         </div>
-        
-        <p className="text-center text-slate-400 text-xs mt-8 font-medium">
-          SomoBloom School Management System • {new Date().getFullYear()}
-        </p>
       </div>
-    </div>
     </>
   );
 }
