@@ -209,17 +209,8 @@ export function StudentProvider({ children }) {
         aiStudyEnabled: profile.aiStudyEnabled ?? true
       });
     } catch (err) {
-      console.warn('[API Connection Failed] Switching to local CBC Sandbox Mode:', err.message);
-      
-      // 2. RESILIENCY FALLBACK: Boot into Sandbox Mode using localStorage cache
-      const storedSandbox = localStorage.getItem('somobloom_sandbox_data');
-      if (storedSandbox) {
-        setStudentData(JSON.parse(storedSandbox));
-      } else {
-        localStorage.setItem('somobloom_sandbox_data', JSON.stringify(CBC_SANDBOX_DATA));
-        setStudentData(CBC_SANDBOX_DATA);
-      }
-      setError(null); // Clear errors since sandbox handles it seamlessly
+      console.error('[API Connection Failed]:', err.message);
+      setError('Failed to load student data. Please ensure you are logged in and connected to the internet.');
     } finally {
       setIsLoading(false);
     }
@@ -240,16 +231,8 @@ export function StudentProvider({ children }) {
       await authLogin(email, password, 'student');
       await fetchStudentData();
     } catch (err) {
-      console.warn('[Offline/Dev Login Bypass] Booting local sandbox credentials.');
-      localStorage.setItem('somobloom_token', 'somobloom_sandbox_mock_token');
-      
-      const storedSandbox = localStorage.getItem('somobloom_sandbox_data');
-      if (storedSandbox) {
-        setStudentData(JSON.parse(storedSandbox));
-      } else {
-        localStorage.setItem('somobloom_sandbox_data', JSON.stringify(CBC_SANDBOX_DATA));
-        setStudentData(CBC_SANDBOX_DATA);
-      }
+      console.error('Login failed:', err);
+      throw err;
     } finally {
       setIsLoading(false);
     }
