@@ -10,6 +10,7 @@ export function AdminProvider({ children }) {
   const [users, setUsers] = useState([]);
   const [classes, setClasses] = useState([]);
   const [payments] = useState(mockPayments);
+  const [feeStructures, setFeeStructures] = useState([]);
   const [activity, setActivity] = useState([]);
   const [auditLog, setAuditLog] = useState([]);
   const [config, setConfig] = useState({ language: 'en' });
@@ -26,18 +27,20 @@ export function AdminProvider({ children }) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [usersRes, classesRes, activityRes, auditRes, configRes] = await Promise.all([
+      const [usersRes, classesRes, activityRes, auditRes, configRes, feeStructuresRes] = await Promise.all([
         api.get('/admin/users'),
         api.get('/admin/classes'),
         api.get('/admin/activity').catch(() => ({ activity: [] })),
         api.get('/admin/audit').catch(() => ({ auditLog: [] })),
-        api.get('/admin/config').catch(() => ({ config: { language: 'en' } }))
+        api.get('/admin/config').catch(() => ({ config: { language: 'en' } })),
+        api.get('/admin/fees/structures').catch(() => ({ feeStructures: [] }))
       ]);
       setUsers(usersRes.users || []);
       setClasses(classesRes.classes || []);
       setActivity(activityRes.activity || []);
       setAuditLog(auditRes.auditLog || []);
       setConfig(configRes.config || { language: 'en' });
+      setFeeStructures(feeStructuresRes.feeStructures || []);
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
@@ -258,6 +261,31 @@ export function AdminProvider({ children }) {
     ]);
   };
 
+  // ── Fee Structure Actions ─────────────────────────────
+  const addFeeStructure = async (structure) => {
+    try {
+      const res = await api.post('/admin/fees/structures', structure);
+      if (res.feeStructure) {
+        setFeeStructures(prev => [...prev, res.feeStructure]);
+        pushAudit(`Created fee structure for term ${structure.term}`);
+      }
+    } catch (err) {
+      console.error('Failed to create fee structure:', err);
+    }
+  };
+
+  const updateFeeStructure = async (id, structure) => {
+    try {
+      const res = await api.put(`/admin/fees/structures/${id}`, structure);
+      if (res.feeStructure) {
+        setFeeStructures(prev => prev.map(f => f.id === id ? res.feeStructure : f));
+        pushAudit(`Updated fee structure for term ${structure.term}`);
+      }
+    } catch (err) {
+      console.error('Failed to update fee structure:', err);
+    }
+  };
+
   // ── Derived metrics ───────────────────────────────────
   const metrics = {
     totalStudents: users.filter(u => u.role === 'student').length,
@@ -272,10 +300,10 @@ export function AdminProvider({ children }) {
 
   return (
     <AdminContext.Provider value={{
-      users, classes, payments, activity, auditLog, config, currentAdmin, metrics,
+      users, classes, payments, activity, auditLog, config, currentAdmin, metrics, feeStructures,
       t, addUser, updateUser, deactivateUser, deleteUser,
       addClass, updateClass, enrollStudent, removeStudent,
-      updateConfig, pushActivity
+      updateConfig, pushActivity, addFeeStructure, updateFeeStructure
     }}>
       {children}
     </AdminContext.Provider>
