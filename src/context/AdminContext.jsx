@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import {
-  mockPayments, mockActivity, mockAuditLog, defaultConfig, translations
+  mockPayments, translations
 } from '../data/adminMockData';
 import { api } from '../lib/api';
 
@@ -10,9 +10,9 @@ export function AdminProvider({ children }) {
   const [users, setUsers] = useState([]);
   const [classes, setClasses] = useState([]);
   const [payments] = useState(mockPayments);
-  const [activity, setActivity] = useState(mockActivity);
-  const [auditLog, setAuditLog] = useState(mockAuditLog);
-  const [config, setConfig] = useState(defaultConfig);
+  const [activity, setActivity] = useState([]);
+  const [auditLog, setAuditLog] = useState([]);
+  const [config, setConfig] = useState({ language: 'en' });
   const [loading, setLoading] = useState(true);
   
   const [currentAdmin, setCurrentAdmin] = useState(() => {
@@ -26,12 +26,18 @@ export function AdminProvider({ children }) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [usersRes, classesRes] = await Promise.all([
+      const [usersRes, classesRes, activityRes, auditRes, configRes] = await Promise.all([
         api.get('/admin/users'),
-        api.get('/admin/classes')
+        api.get('/admin/classes'),
+        api.get('/admin/activity').catch(() => ({ activity: [] })),
+        api.get('/admin/audit').catch(() => ({ auditLog: [] })),
+        api.get('/admin/config').catch(() => ({ config: { language: 'en' } }))
       ]);
       setUsers(usersRes.users || []);
       setClasses(classesRes.classes || []);
+      setActivity(activityRes.activity || []);
+      setAuditLog(auditRes.auditLog || []);
+      setConfig(configRes.config || { language: 'en' });
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {

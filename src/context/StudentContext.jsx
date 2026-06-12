@@ -157,6 +157,24 @@ export function StudentProvider({ children }) {
       const { classes } = await api.get('/student/classes');
       const { grades } = await api.get('/student/grades');
       
+      let tasksData = [];
+      let competenciesData = CBC_SANDBOX_DATA.competencies;
+      try {
+        const tasksRes = await api.get('/student/tasks');
+        if (tasksRes.tasks) tasksData = tasksRes.tasks;
+      } catch (err) {
+        console.warn('Failed to load tasks:', err);
+      }
+      
+      try {
+        const compRes = await api.get('/student/competencies');
+        if (compRes.competencies && compRes.competencies.length > 0) {
+          competenciesData = compRes.competencies;
+        }
+      } catch (err) {
+        console.warn('Failed to load competencies:', err);
+      }
+      
       let portfolio = [];
       try {
         const response = await api.get('/student/portfolio');
@@ -198,8 +216,8 @@ export function StudentProvider({ children }) {
           subStrand: 'Strand Content',
           description: c.description || 'Active CBC Learning Area.'
         })),
-        competencies: CBC_SANDBOX_DATA.competencies, // fallback to standard CBC descriptors
-        tasks: [],
+        competencies: competenciesData,
+        tasks: tasksData,
         portfolio: formattedPortfolio.length > 0 ? formattedPortfolio : CBC_SANDBOX_DATA.portfolio,
         marks: {
           rats: (grades || []).filter(g => g.assignmentTitle.includes('RAT')).map(g => g.score),
