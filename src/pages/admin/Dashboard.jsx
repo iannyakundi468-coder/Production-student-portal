@@ -24,6 +24,21 @@ export default function Dashboard() {
     navigate('/admin' + path);
   };
 
+  const { users } = useAdmin();
+  const totalUsers = users.length || 1;
+  const numStudents = metrics.totalStudents;
+  const numParents = users.filter(u => u.role === 'parent' || u.role === 'guardian').length;
+  const numTeachers = metrics.totalTeachers;
+  
+  const pctStudents = Math.round((numStudents / totalUsers) * 100);
+  const pctParents = Math.round((numParents / totalUsers) * 100);
+  const pctTeachers = Math.round((numTeachers / totalUsers) * 100);
+  
+  const C = 251.2; // 2 * pi * 40
+  const dashStudents = (pctStudents / 100) * C;
+  const dashParents = (pctParents / 100) * C;
+  const dashTeachers = (pctTeachers / 100) * C;
+
   return (
     <div>
       <div className="page-header">
@@ -53,22 +68,22 @@ export default function Dashboard() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, gap: 30 }}>
             <svg viewBox="0 0 100 100" style={{ width: 100, height: 100 }}>
               <circle cx="50" cy="50" r="40" fill="none" stroke="#f1f5f9" strokeWidth="8" />
-              <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="8" strokeDasharray="150.7 251.2" strokeDashoffset="0" />
-              <circle cx="50" cy="50" r="40" fill="none" stroke="#f59e0b" strokeWidth="8" strokeDasharray="75.4 251.2" strokeDashoffset="-150.7" />
-              <circle cx="50" cy="50" r="40" fill="none" stroke="#4f46e5" strokeWidth="8" strokeDasharray="25.1 251.2" strokeDashoffset="-226.1" />
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="8" strokeDasharray={`${dashStudents} ${C}`} strokeDashoffset="0" />
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#f59e0b" strokeWidth="8" strokeDasharray={`${dashParents} ${C}`} strokeDashoffset={`-${dashStudents}`} />
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#4f46e5" strokeWidth="8" strokeDasharray={`${dashTeachers} ${C}`} strokeDashoffset={`-${dashStudents + dashParents}`} />
             </svg>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: '600', color: '#64748b' }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
-                Students (60%)
+                Students ({pctStudents}%)
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: '600', color: '#64748b' }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />
-                Parents (30%)
+                Parents ({pctParents}%)
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: '600', color: '#64748b' }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4f46e5' }} />
-                Teachers (10%)
+                Teachers ({pctTeachers}%)
               </div>
             </div>
           </div>

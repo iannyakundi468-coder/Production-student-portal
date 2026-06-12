@@ -30,7 +30,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error("Invalid response from server: Role is missing.");
             }
 
-            const userObj: User = data.user;
+            let userObj: User = data.user;
+            if ((userObj.role as any) === 'teacher') userObj.role = 'staff';
+            if ((userObj.role as any) === 'parent') userObj.role = 'guardian';
             
             setUser(userObj);
             localStorage.setItem('somobloom_token', data.token);

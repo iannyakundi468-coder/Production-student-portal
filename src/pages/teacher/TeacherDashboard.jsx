@@ -26,11 +26,45 @@ export default function TeacherDashboard() {
     }, 2000);
   };
 
+  let totalPresent = 0;
+  let totalAttendance = 0;
+  let be = 0, ae = 0, me = 0, ee = 0;
+  
+  teacherData?.classes?.forEach(c => {
+    c.students?.forEach(s => {
+      if (s.attendance) {
+        totalPresent += (s.attendance.present || 0);
+        totalAttendance += (s.attendance.total || 0);
+      }
+      const strands = s.cbcAssessments?.strands || [];
+      strands.forEach(st => {
+        if (st.level === 'BE') be++;
+        else if (st.level === 'AE') ae++;
+        else if (st.level === 'ME') me++;
+        else if (st.level === 'EE') ee++;
+      });
+    });
+  });
+  
+  const attendanceRate = totalAttendance > 0 ? Math.round((totalPresent / totalAttendance) * 100) + '%' : 'N/A';
+  const totalCbc = be + ae + me + ee;
+  const cbcData = totalCbc > 0 ? [
+    { label: 'Below (BE)', value: Math.round((be/totalCbc)*100), color: '#f87171' },
+    { label: 'Approach (AE)', value: Math.round((ae/totalCbc)*100), color: '#fbbf24' },
+    { label: 'Meet (ME)', value: Math.round((me/totalCbc)*100), color: '#4f46e5' },
+    { label: 'Exceed (EE)', value: Math.round((ee/totalCbc)*100), color: '#10b981' }
+  ] : [
+    { label: 'Below (BE)', value: 0, color: '#f87171' },
+    { label: 'Approach (AE)', value: 0, color: '#fbbf24' },
+    { label: 'Meet (ME)', value: 0, color: '#4f46e5' },
+    { label: 'Exceed (EE)', value: 0, color: '#10b981' }
+  ];
+
   const stats = [
-    { label: 'Total Learners', value: teacherData?.classes?.reduce((acc, c) => acc + (c.students?.length || 0), 0) || 0, icon: Users, color: 'text-blue-600', trend: '+12%' },
+    { label: 'Total Learners', value: teacherData?.classes?.reduce((acc, c) => acc + (c.students?.length || 0), 0) || 0, icon: Users, color: 'text-blue-600', trend: 'Current' },
     { label: 'Classes', value: teacherData?.classes?.length || 0, icon: Award, color: 'text-indigo-600', trend: 'Stable' },
-    { label: 'Submissions', value: '12', icon: BookOpen, color: 'text-amber-600', trend: '+4 today' },
-    { label: 'Attendance Rate', value: '94.2%', icon: Clock, color: 'text-emerald-600', trend: '+0.5%' },
+    { label: 'Submissions', value: teacherData?.portfolioItems?.length || 0, icon: BookOpen, color: 'text-amber-600', trend: 'Total' },
+    { label: 'Attendance Rate', value: attendanceRate, icon: Clock, color: 'text-emerald-600', trend: 'Overall' },
   ];
 
   return (
@@ -101,12 +135,7 @@ export default function TeacherDashboard() {
               
               {/* SVG Bar Chart */}
               <div className="flex items-end justify-between gap-4 h-32 pt-4 px-2">
-                {[
-                  { label: 'Below (BE)', value: 8, color: '#f87171' },
-                  { label: 'Approach (AE)', value: 18, color: '#fbbf24' },
-                  { label: 'Meet (ME)', value: 48, color: '#4f46e5' },
-                  { label: 'Exceed (EE)', value: 26, color: '#10b981' }
-                ].map(d => (
+                {cbcData.map(d => (
                   <div key={d.label} className="flex-1 flex flex-col items-center gap-1 group">
                     <span className="text-[10px] font-bold text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
                       {d.value}%
@@ -129,7 +158,7 @@ export default function TeacherDashboard() {
                   <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Average Rate (Mon - Fri)</p>
                 </div>
                 <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                  94.2% Avg
+                  {attendanceRate} Avg
                 </span>
               </div>
 
@@ -185,25 +214,26 @@ export default function TeacherDashboard() {
               </button>
             </div>
             <div className="divide-y divide-slate-100">
-              {[
-                { type: 'Assessment', text: 'Alex Johnson updated to "Exceeding Expectation" in Science', time: '2h ago', icon: Star, color: 'text-amber-500' },
-                { type: 'Portfolio', text: 'Sarah Smith submitted a new evidence item for review', time: '4h ago', icon: BookOpen, color: 'text-blue-500' },
-                { type: 'Attendance', text: 'Grade 4 Science roll call was completed', time: 'Today', icon: Check, color: 'text-emerald-500' },
-                { type: 'Class', text: 'New strand "Sustainable Agriculture" added to Grade 5', time: 'Yesterday', icon: Zap, color: 'text-indigo-500' },
-              ].map((activity, i) => (
-                <div key={i} className="px-6 py-4 flex items-center justify-between group hover:bg-slate-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-full bg-white border border-slate-100 ${activity.color}`}>
-                      <activity.icon size={16} />
+              {teacherData?.portfolioItems?.length > 0 ? (
+                teacherData.portfolioItems.slice(0, 4).map((activity, i) => (
+                  <div key={i} className="px-6 py-4 flex items-center justify-between group hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-full bg-white border border-slate-100 text-blue-500">
+                        <BookOpen size={16} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">New portfolio entry: {activity.title}</p>
+                        <p className="text-xs text-slate-400">Portfolio • {new Date(activity.createdAt || Date.now()).toLocaleDateString()}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800">{activity.text}</p>
-                      <p className="text-xs text-slate-400">{activity.type} • {activity.time}</p>
-                    </div>
+                    <ChevronRight size={16} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <ChevronRight size={16} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
+                ))
+              ) : (
+                <div className="px-6 py-8 text-center text-slate-500 text-sm">
+                  No recent activity found.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
