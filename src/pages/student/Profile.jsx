@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useStudent } from '../../context/StudentContext';
-import { Camera, Save, X, Edit2, AlertCircle, User, Bot, CheckCircle2, XCircle } from 'lucide-react';
+import { Camera, Save, X, Edit2, AlertCircle, User, Bot, CheckCircle2, XCircle, Printer } from 'lucide-react';
+import ReportCardPrintView from '../../components/ReportCardPrintView';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -14,7 +15,7 @@ const profileSchema = z.object({
 });
 
 export default function Profile() {
-  const { studentData, updateProfile, toggleAiStudy } = useStudent();
+  const { studentData, portfolio, competencies, attendance, updateProfile, toggleAiStudy } = useStudent();
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(studentData.avatarUrl);
 
@@ -71,15 +72,24 @@ export default function Profile() {
           <h2 className="text-3xl font-bold">Profile</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your personal information and settings.</p>
         </div>
-        {!isEditing && (
+        <div className="flex gap-3">
           <button
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors font-medium"
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 rounded-xl transition-colors font-medium"
           >
-            <Edit2 size={18} />
-            Edit Profile
+            <Printer size={18} />
+            Report Card
           </button>
-        )}
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors font-medium"
+            >
+              <Edit2 size={18} />
+              Edit Profile
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -276,6 +286,12 @@ export default function Profile() {
         </div>
       </div>
 
+      <ReportCardPrintView 
+        student={studentData} 
+        portfolio={portfolio} 
+        competencies={competencies} 
+        attendance={attendance} 
+      />
     </div>
   );
 }

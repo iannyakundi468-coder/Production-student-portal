@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "school-system",
+  "account_id": "b9a79aebae11306fcf65d0e01cce47be",
   "compatibility_date": "2025-09-27",
   "observability": {
     "enabled": true

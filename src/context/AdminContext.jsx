@@ -1,7 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import {
-  mockPayments, translations
-} from '../data/adminMockData';
+import { translations } from '../data/adminMockData';
 import { api } from '../lib/api';
 
 const AdminContext = createContext(null);
@@ -9,7 +7,7 @@ const AdminContext = createContext(null);
 export function AdminProvider({ children }) {
   const [users, setUsers] = useState([]);
   const [classes, setClasses] = useState([]);
-  const [payments] = useState(mockPayments);
+  const [payments, setPayments] = useState([]);
   const [feeStructures, setFeeStructures] = useState([]);
   const [activity, setActivity] = useState([]);
   const [auditLog, setAuditLog] = useState([]);
@@ -27,13 +25,14 @@ export function AdminProvider({ children }) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [usersRes, classesRes, activityRes, auditRes, configRes, feeStructuresRes] = await Promise.all([
+      const [usersRes, classesRes, activityRes, auditRes, configRes, feeStructuresRes, paymentsRes] = await Promise.all([
         api.get('/admin/users'),
         api.get('/admin/classes'),
         api.get('/admin/activity').catch(() => ({ activity: [] })),
         api.get('/admin/audit').catch(() => ({ auditLog: [] })),
         api.get('/admin/config').catch(() => ({ config: { language: 'en' } })),
-        api.get('/admin/fees/structures').catch(() => ({ feeStructures: [] }))
+        api.get('/admin/fees/structures').catch(() => ({ feeStructures: [] })),
+        api.get('/admin/payments').catch(() => ({ payments: [] }))
       ]);
       setUsers(usersRes.users || []);
       setClasses(classesRes.classes || []);
@@ -41,6 +40,7 @@ export function AdminProvider({ children }) {
       setAuditLog(auditRes.auditLog || []);
       setConfig(configRes.config || { language: 'en' });
       setFeeStructures(feeStructuresRes.feeStructures || []);
+      setPayments(paymentsRes.payments || []);
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
