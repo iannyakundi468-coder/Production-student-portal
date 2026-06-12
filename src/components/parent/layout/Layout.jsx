@@ -138,6 +138,13 @@ export default function Layout() {
           </div>
 
           {/* Profile Widget */}
+          <button className="sidebar-link" onClick={handleLogout} style={{ marginTop: '0.5rem', color: 'var(--danger)', background: 'transparent', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <LogOut size={20} />
+            </div>
+            <span style={{ fontWeight: 600 }}>Sign Out</span>
+          </button>
+          
           <div className="sidebar-profile" onClick={() => setShowProfileMenu(v => !v)}>
             <div className="avatar-circle">
               {currentParent?.avatar || 'P'}
