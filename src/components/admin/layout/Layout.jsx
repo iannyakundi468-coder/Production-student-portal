@@ -29,7 +29,8 @@ export default function Layout() {
   };
 
   return (
-    <div className="layout">
+    <div className="admin-portal-theme">
+      <div className="layout">
       {/* Mobile Overlay */}
       <div
         className={`mobile-overlay ${isMobileMenuOpen ? 'open' : ''}`}
@@ -140,6 +141,7 @@ export default function Layout() {
 
       {/* AI Assistant Floating Button */}
       <AIAssistant />
+      </div>
     </div>
   );
 }

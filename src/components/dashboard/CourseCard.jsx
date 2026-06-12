@@ -11,8 +11,8 @@ export default function CourseCard({ course }) {
           {course.progress}%
         </div>
       </div>
-      <h3 className="text-xl font-bold mb-2 line-clamp-1" title={course.title}>
-        {course.title}
+      <h3 className="text-xl font-bold mb-2 line-clamp-1" title={course.title || course.name}>
+        {course.title || course.name}
       </h3>
       <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm mb-4">
         <Users size={16} className="mr-2" />

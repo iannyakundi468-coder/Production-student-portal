@@ -55,9 +55,10 @@ export default function Layout() {
   const unreadCount = data.messages.filter(m => !m.read).length;
 
   return (
-    <div className="app-container">
-      
-      {/* =========================================
+    <div className={`parent-portal-theme ${theme === 'dark' ? 'dark-theme' : ''}`}>
+      <div className="app-container">
+        
+        {/* =========================================
          DESKTOP SIDEBAR (Visible > 768px)
          ========================================= */}
       <aside className="desktop-sidebar">
@@ -340,6 +341,7 @@ export default function Layout() {
 
       {/* AI Assistant FAB and slide-drawer context */}
       <AIAssistant />
+      </div>
     </div>
   );
 }
