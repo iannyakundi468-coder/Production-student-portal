@@ -225,10 +225,20 @@ export function AdminProvider({ children }) {
   };
 
   // ── Config actions ────────────────────────────────────
-  const updateConfig = (patch) => {
-    setConfig(prev => ({ ...prev, ...patch }));
-    const key = Object.keys(patch)[0];
-    pushAudit(`Updated setting "${key}" to "${patch[key]}"`);
+  const updateConfig = async (patch) => {
+    try {
+      const newConfig = { ...config, ...patch };
+      const res = await api.put('/admin/config', newConfig);
+      if (res.config) setConfig(res.config);
+      else setConfig(newConfig);
+      
+      const key = Object.keys(patch)[0];
+      pushAudit(`Updated setting "${key}" to "${patch[key]}"`);
+    } catch (err) {
+      console.error('Failed to update config:', err);
+      // Optimistic update fallback
+      setConfig(prev => ({ ...prev, ...patch }));
+    }
   };
 
   // ── Helpers ───────────────────────────────────────────

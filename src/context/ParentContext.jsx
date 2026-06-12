@@ -142,29 +142,25 @@ export const ParentProvider = ({ children }) => {
         };
         const finalCbc = Object.keys(cbcProgress).length > 0 ? cbcProgress : defaultCbc;
 
-        // 4. Client-Persistent Dues/Fees Ledger
-        const feeKey = `somobloom_fees:${student.id}`;
-        let localFeeState = localStorage.getItem(feeKey);
-        
-        if (!localFeeState) {
-          const totalBalance = 40000; // Standard term bill KES
-          const breakdown = [
+        // 4. Fetch live Fees Ledger from D1 Backend
+        let fees = {
+          totalBalance: 40000,
+          paidAmount: 0,
+          currency: 'KES',
+          breakdown: [
             { name: 'Tuition Fee', cost: 25000 },
             { name: 'Meals & Food Program', cost: 6000 },
             { name: 'Creative Activities & Sports', cost: 3500 },
             { name: 'School Transport Bus', cost: 5500 }
-          ];
-          const initialFee = {
-            totalBalance,
-            paidAmount: 0,
-            currency: 'KES',
-            breakdown,
-            history: []
-          };
-          localStorage.setItem(feeKey, JSON.stringify(initialFee));
-          localFeeState = JSON.stringify(initialFee);
+          ],
+          history: []
+        };
+        try {
+          const feeRes = await api.get(`/parent/students/${student.id}/fees`);
+          if (feeRes.fees) fees = feeRes.fees;
+        } catch (err) {
+          console.warn(`Failed to fetch fees for student ${student.id}:`, err);
         }
-        const fees = JSON.parse(localFeeState);
 
         return {
           ...student,
@@ -230,44 +226,15 @@ export const ParentProvider = ({ children }) => {
   const switchChild = (id) => setActiveChildId(id);
   const toggleLanguage = () => setLanguage(prev => prev === 'en' ? 'sw' : 'en');
 
-  // persistent Payment Auditor
-  const addPayment = (studentId, amount, method) => {
-    const feeKey = `somobloom_fees:${studentId}`;
-    const localFeeState = localStorage.getItem(feeKey);
-    if (!localFeeState) return;
-
-    const fees = JSON.parse(localFeeState);
-    const numericAmount = parseFloat(amount);
-    
-    // Increment Paid, Decrement Balance
-    const newPaid = fees.paidAmount + numericAmount;
-    const newBalance = Math.max(0, fees.totalBalance - numericAmount);
-
-    const transaction = {
-      id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
-      date: new Date().toISOString().split('T')[0],
-      ref: `TXN-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-      amount: numericAmount,
-      method: method === 'mpesa' ? 'Mobile Money (M-PESA)' : method === 'card' ? 'Credit/Debit Card' : 'Bank Transfer',
-      status: 'Paid'
-    };
-
-    const updatedFees = {
-      ...fees,
-      paidAmount: newPaid,
-      totalBalance: newBalance,
-      history: [transaction, ...fees.history]
-    };
-
-    localStorage.setItem(feeKey, JSON.stringify(updatedFees));
-    
-    // Refresh student data in context
-    setParentChildren(prev => prev.map(child => {
-      if (child.id === studentId) {
-        return { ...child, fees: updatedFees };
-      }
-      return child;
-    }));
+  // Live Payment API Integration
+  const addPayment = async (studentId, amount, method) => {
+    try {
+      await api.post('/parent/payments', { studentId, amount, method });
+      // Refresh parent data to get the updated fees from the backend
+      await fetchParentData();
+    } catch (err) {
+      console.error('Failed to submit payment:', err);
+    }
   };
 
   const markMessageRead = async (msgId) => {

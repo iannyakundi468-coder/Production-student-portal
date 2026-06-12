@@ -175,6 +175,14 @@ export function StudentProvider({ children }) {
         console.warn('Failed to load competencies:', err);
       }
       
+      let attendanceData = { totalDays: 45, presentDays: 42, absentDays: 3, lateDays: 0, attendancePercent: 93 };
+      try {
+        const attRes = await api.get('/student/attendance');
+        if (attRes.attendance) attendanceData = attRes.attendance;
+      } catch (err) {
+        console.warn('Failed to load attendance:', err);
+      }
+      
       let portfolio = [];
       try {
         const response = await api.get('/student/portfolio');
@@ -223,7 +231,7 @@ export function StudentProvider({ children }) {
           rats: (grades || []).filter(g => g.assignmentTitle.includes('RAT')).map(g => g.score),
           cats: (grades || []).filter(g => g.assignmentTitle.includes('CAT')).map(g => g.score)
         },
-        attendance: profile.attendanceSummary || CBC_SANDBOX_DATA.attendance,
+        attendance: attendanceData,
         aiStudyEnabled: profile.aiStudyEnabled ?? true
       });
     } catch (err) {
