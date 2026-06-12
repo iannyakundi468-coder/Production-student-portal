@@ -8,7 +8,14 @@ export default function Dashboard() {
   const { activeChild, data, t } = useParentContext();
   const navigate = useNavigate();
 
-  if (!activeChild) return null;
+  if (!activeChild) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+        <h2>No Student Profiles Found</h2>
+        <p>Please contact the school administration to link your student profiles to this account.</p>
+      </div>
+    );
+  }
 
   const unreadMessagesCount = data.messages.filter(m => !m.read).length;
   const uploadsCount = activeChild.schoolwork.length;

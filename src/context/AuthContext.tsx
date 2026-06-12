@@ -77,7 +77,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const storedUser = localStorage.getItem('somobloom_user');
         const token = localStorage.getItem('somobloom_token');
         if (storedUser && token) {
-            setUser(JSON.parse(storedUser));
+            const parsedUser = JSON.parse(storedUser);
+            if (parsedUser.role === 'teacher') parsedUser.role = 'staff';
+            if (parsedUser.role === 'parent') parsedUser.role = 'guardian';
+            setUser(parsedUser);
+            
+            // Re-save normalized user back to storage to prevent issues on next load
+            localStorage.setItem('somobloom_user', JSON.stringify(parsedUser));
         }
     }, []);
 
