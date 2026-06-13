@@ -52,6 +52,32 @@ export default function Classes() {
   const [planType, setPlanType] = useState('scheme'); // 'scheme' or 'lesson'
   const [topicInput, setTopicInput] = useState('');
 
+  // AI Remark State
+  const [generatedRemark, setGeneratedRemark] = useState('');
+  const [isGeneratingRemark, setIsGeneratingRemark] = useState(false);
+
+  const handleGenerateRemark = async (student) => {
+    setIsGeneratingRemark(true);
+    setGeneratedRemark('');
+    try {
+      const res = await api.post('/teacher/ai/generate-feedback', {
+        studentProfileId: student.id,
+        studentName: student.name,
+        attendancePercent: Math.round((student.attendance.present / student.attendance.total) * 100) || 0,
+        strands: student.cbcAssessments?.strands,
+        competencies: student.cbcAssessments?.competencies
+      });
+      if (res.remark) {
+        setGeneratedRemark(res.remark);
+      }
+    } catch (err) {
+      console.error('Failed to generate remark', err);
+      setGeneratedRemark("Failed to generate remark. Please try again.");
+    } finally {
+      setIsGeneratingRemark(false);
+    }
+  };
+
   const classes = teacherData?.classes || [];
   const selectedClass = classes.find(c => c.id === selectedClassId);
 
@@ -740,10 +766,20 @@ export default function Classes() {
               </div>
 
               {/* Dynamic AI-Generated / Teacher Remarks */}
-              <div className="mb-8 p-4 bg-slate-50 border border-slate-200 rounded">
-                <p className="text-slate-500 font-semibold text-xs uppercase tracking-wider mb-2">Teacher Remarks & Core Value Assessment</p>
+              <div className="mb-8 p-4 bg-slate-50 border border-slate-200 rounded relative">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-slate-500 font-semibold text-xs uppercase tracking-wider">Teacher Remarks & Core Value Assessment</p>
+                  <button 
+                    onClick={() => handleGenerateRemark(selectedStudentForReport)}
+                    disabled={isGeneratingRemark}
+                    className="text-xs font-semibold px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors flex items-center gap-1 disabled:opacity-50"
+                  >
+                    {isGeneratingRemark ? <RefreshCw size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                    {isGeneratingRemark ? 'Generating...' : '✨ AI Generate'}
+                  </button>
+                </div>
                 <p className="text-sm font-medium text-slate-800 leading-relaxed italic">
-                  "{selectedStudentForReport.name} displays exemplary leadership qualities, teamwork capability, and is highly inquisitive. Highly recommended to maintain standard practice in self-directed learning projects."
+                  {generatedRemark ? generatedRemark : `"${selectedStudentForReport.name} displays exemplary leadership qualities, teamwork capability, and is highly inquisitive. Highly recommended to maintain standard practice in self-directed learning projects."`}
                 </p>
               </div>
 

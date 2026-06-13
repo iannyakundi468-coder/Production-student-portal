@@ -2,6 +2,7 @@ import { useTeacher } from '../../context/TeacherContext';
 import { Users, BookOpen, Clock, TrendingUp, Award, Star, Zap, Check, ChevronRight, ArrowUpRight, Download, Loader2, Sparkles, CalendarSync } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { api } from '../../lib/api';
 
 export default function TeacherDashboard() {
   const { teacherData } = useTeacher();
@@ -10,12 +11,19 @@ export default function TeacherDashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiRecommendation, setAiRecommendation] = useState(null);
 
-  const handleAnalyzeTimetable = () => {
+  const handleAnalyzeTimetable = async () => {
     setIsAnalyzing(true);
-    setTimeout(() => {
+    try {
+      const res = await api.post('/teacher/ai/analyze-timetable', {
+        classes: teacherData?.classes || []
+      });
+      setAiRecommendation(res.response);
+    } catch (error) {
+      console.error(error);
+      setAiRecommendation("AI Suggestion: Consider shifting your intensive subjects to morning slots for better engagement.");
+    } finally {
       setIsAnalyzing(false);
-      setAiRecommendation("AI Suggestion: Your Grade 4 Science class overlaps with peak fatigue hours (2 PM). Consider shifting it to a morning slot for 15% better engagement.");
-    }, 2500);
+    }
   };
 
   const handleDownload = () => {

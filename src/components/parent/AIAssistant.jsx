@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Bot, User, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParentContext } from '../../context/ParentContext';
+import { api } from '../../lib/api';
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +25,7 @@ export default function AIAssistant() {
     }
   }, [messages, isOpen]);
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
@@ -34,31 +35,18 @@ export default function AIAssistant() {
     setInputValue('');
     setIsTyping(true);
 
-    // AI Logic Mock
-    setTimeout(() => {
-      let aiResponse = "I'm not sure about that. Try asking about your child's progress or fee balance.";
-      const lowerInput = userText.toLowerCase();
-
-      if (lowerInput.includes('progress') || lowerInput.includes('doing') || lowerInput.includes('grade')) {
-        if (activeChild) {
-          const subjects = Object.entries(activeChild.progress).map(([sub, level]) => `${sub} (${level})`).join(', ');
-          aiResponse = `${activeChild.name} is currently working on: ${subjects}. If a subject says "Developing", it means they are still grasping the basics and could use some practice at home.`;
-        }
-      } else if (lowerInput.includes('fee') || lowerInput.includes('balance') || lowerInput.includes('pay')) {
-        if (activeChild) {
-          aiResponse = `The current fee balance for ${activeChild.name} is ${activeChild.fees.currency} ${activeChild.fees.totalBalance.toLocaleString()}. You can pay this from the 'Pay Fees' section.`;
-        }
-      } else if (lowerInput.includes('message') || lowerInput.includes('teacher')) {
-        aiResponse = `You can communicate with the teachers in the Messages section. You currently have a few unread announcements.`;
-      } else if (lowerInput.includes('developing') || lowerInput.includes('proficient')) {
-         aiResponse = `"Beginning" means starting to learn. "Developing" means they are getting there but need practice. "Proficient" means they understand it well. "Exemplary" means they excel at it!`;
-      } else if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
-         aiResponse = `Hi there! Ask me anything about ${activeChild?.name || 'your child'}'s school information.`;
-      }
-
-      setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'ai', text: aiResponse }]);
+    try {
+      const res = await api.post('/parent/ask-assistant', {
+        prompt: userText,
+        childData: activeChild
+      });
+      setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'ai', text: res.response }]);
+    } catch (err) {
+      console.error(err);
+      setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'ai', text: "Sorry, I'm having trouble connecting right now." }]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (

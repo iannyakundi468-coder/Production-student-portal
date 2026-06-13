@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { Sparkles, Bot, X } from 'lucide-react';
+import { api } from '../../lib/api';
 
 export default function AIAssistant() {
   const [open, setOpen] = useState(false);
@@ -10,32 +11,25 @@ export default function AIAssistant() {
   const [input, setInput] = useState('');
   const { metrics, activity } = useAdmin();
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
     const userMsg = input.trim();
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setInput('');
+    setMessages(prev => [...prev, { role: 'ai', text: "Thinking...", isTyping: true }]);
 
-    // Mock AI response delay
-    setTimeout(() => {
-      let aiResponse = "I'm sorry, I didn't quite catch that. Could you ask about finances or student data?";
-      const lower = userMsg.toLowerCase();
-
-      if (lower.includes('finance') || lower.includes('money') || lower.includes('fee')) {
-        aiResponse = `Looking at the current data, you have collected KES ${metrics.totalCollected.toLocaleString()} this term, with KES ${metrics.pendingFees.toLocaleString()} still pending across ${metrics.failedPayments} overdue accounts. The collection rate could be improved by sending automated reminders to the overdue accounts.`;
-      } else if (lower.includes('student') || lower.includes('enroll')) {
-        aiResponse = `You currently have ${metrics.totalStudents} students managed by ${metrics.totalTeachers} teachers, spread across ${metrics.activeClasses} active classes. The student-to-teacher ratio is looking healthy at roughly ${Math.round(metrics.totalStudents / metrics.totalTeachers)}:1.`;
-      } else if (lower.includes('calculate') || lower.includes('add') || lower.includes('+')) {
-        aiResponse = `I can perform basic calculations. Total revenue (Collected + Pending) is KES ${(metrics.totalCollected + metrics.pendingFees).toLocaleString()}.`;
-      } else if (lower.includes('activity') || lower.includes('recent')) {
-        const latest = activity[0];
-        aiResponse = `The most recent activity was ${latest.user} who ${latest.action} ${latest.detail ? `(${latest.detail})` : ''} ${latest.time}.`;
-      }
-
-      setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
-    }, 1000);
+    try {
+      const res = await api.post('/admin/ask-assistant', {
+        prompt: userMsg,
+        metrics
+      });
+      setMessages(prev => prev.filter(m => !m.isTyping).concat({ role: 'ai', text: res.response }));
+    } catch (err) {
+      console.error(err);
+      setMessages(prev => prev.filter(m => !m.isTyping).concat({ role: 'ai', text: "Sorry, I'm having trouble connecting right now." }));
+    }
   };
 
   return (
