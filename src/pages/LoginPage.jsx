@@ -3,14 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, ShieldAlert } from 'lucide-react';
 import SomoBloomLogo from '../components/SomoBloomLogo';
-import AnimatedIntro from '../components/AnimatedIntro';
 
 export default function LoginPage() {
   const { login, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState('');
-  const [showIntro, setShowIntro] = useState(true);
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   // If already authenticated, redirect to appropriate page
@@ -48,8 +46,7 @@ export default function LoginPage() {
 
   return (
     <>
-      {showIntro && <AnimatedIntro onComplete={() => setShowIntro(false)} />}
-      <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden text-slate-800 bg-[#f8fafc] transition-opacity duration-1000 ${showIntro ? 'opacity-0' : 'opacity-100'}`}>
+      <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden text-slate-800 bg-[#f8fafc]`}>
         
         {/* Background Neon Glowing Orbs */}
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse-slow" />
