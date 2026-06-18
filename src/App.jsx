@@ -33,6 +33,7 @@ import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import TeacherClasses from './pages/teacher/Classes';
 import TeacherPortfolio from './pages/teacher/TeacherPortfolio';
 import TeacherProfile from './pages/teacher/TeacherProfile';
+import TeacherTimetable from './pages/teacher/Timetable';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -40,6 +41,7 @@ import AdminUserManagement from './pages/admin/UserManagement';
 import AdminClassSetup from './pages/admin/ClassSetup';
 import AdminFinancialOverview from './pages/admin/FinancialOverview';
 import AdminSystemSettings from './pages/admin/SystemSettings';
+import AdminTimetable from './pages/admin/Timetable';
 
 function HomeRedirect() {
   const { user, isAuthenticated } = useAuth();
@@ -113,6 +115,7 @@ function App() {
                       <Route path="classes" element={<TeacherClasses />} />
                       <Route path="portfolio" element={<TeacherPortfolio />} />
                       <Route path="profile" element={<TeacherProfile />} />
+                      <Route path="timetable" element={<TeacherTimetable />} />
                     </Route>
 
                     {/* Admin Protected Routes */}
@@ -129,6 +132,7 @@ function App() {
                       <Route path="classes" element={<AdminClassSetup />} />
                       <Route path="finance" element={<AdminFinancialOverview />} />
                       <Route path="settings" element={<AdminSystemSettings />} />
+                      <Route path="timetable" element={<AdminTimetable />} />
                     </Route>
 
                     {/* Fallback Redirect */}

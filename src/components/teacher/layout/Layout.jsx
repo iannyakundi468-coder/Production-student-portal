@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, User, LogOut, BookOpen, Users, Menu, Bell } from 'lucide-react';
+import { LayoutDashboard, User, LogOut, BookOpen, Users, Menu, Bell, Calendar } from 'lucide-react';
 import { ErrorBoundary } from '../../common/ErrorBoundary';
 import { useTeacher } from '../../../context/TeacherContext';
 import { useAuth } from '../../../context/AuthContext';
@@ -23,6 +23,7 @@ export default function Layout() {
     { to: '/teacher', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/teacher/classes', label: 'My Classes', icon: Users },
     { to: '/teacher/portfolio', label: 'Portfolio Manager', icon: BookOpen },
+    { to: '/teacher/timetable', label: 'My Timetable', icon: Calendar },
     { to: '/teacher/profile', label: 'Settings', icon: User },
   ];
 

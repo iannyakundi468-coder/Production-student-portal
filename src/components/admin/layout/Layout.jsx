@@ -4,13 +4,14 @@ import { useAuth } from '../../../context/AuthContext';
 import AIAssistant from '../AIAssistant';
 import SomoBloomLogo from '../../SomoBloomLogo';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, BookOpen, CircleDollarSign, Settings as SettingsIcon, Menu, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, CircleDollarSign, Calendar, Settings as SettingsIcon, Menu, LogOut } from 'lucide-react';
 
 const navItems = [
   { path: '/admin', label: 'dashboard', icon: <LayoutDashboard size={20} />, section: 'main' },
   { path: '/admin/users', label: 'users', icon: <Users size={20} />, section: 'main' },
   { path: '/admin/classes', label: 'classes', icon: <BookOpen size={20} />, section: 'main' },
   { path: '/admin/finance', label: 'finance', icon: <CircleDollarSign size={20} />, section: 'main' },
+  { path: '/admin/timetable', label: 'timetable', icon: <Calendar size={20} />, section: 'main' },
   { path: '/admin/settings', label: 'settings', icon: <SettingsIcon size={20} />, section: 'system' },
 ];
 
@@ -25,6 +26,7 @@ export default function Layout() {
     '/admin/users': t('users'),
     '/admin/classes': t('classes'),
     '/admin/finance': t('finance'),
+    '/admin/timetable': t('timetable'),
     '/admin/settings': t('settings'),
   };
 
