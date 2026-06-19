@@ -8,9 +8,10 @@ export default function MessagesHub() {
   const [activeTab, setActiveTab] = useState('inbox');
   const [selectedMsg, setSelectedMsg] = useState(null);
   const [replySent, setReplySent] = useState(false);
+  const [replyError, setReplyError] = useState(false);
   const [replyValue, setReplyValue] = useState('');
   const [meetingDate, setMeetingDate] = useState('');
-  const [meetingStatus, setMeetingStatus] = useState('idle'); // idle | loading | success
+  const [meetingStatus, setMeetingStatus] = useState('idle'); // idle | loading | success | error
 
   const handleReply = async (e) => {
     e.preventDefault();
@@ -27,6 +28,7 @@ export default function MessagesHub() {
 
     const recipientId = selectedMsg.senderId;
     setReplySent(true);
+    setReplyError(false);
 
     const success = await sendMessage(recipientId, replyText, `Re: ${selectedMsg.subject || 'Direct Message'}`);
     if (success) {
@@ -37,6 +39,7 @@ export default function MessagesHub() {
       }, 2000);
     } else {
       setReplySent(false);
+      setReplyError(true);
     }
   };
 
@@ -61,7 +64,7 @@ export default function MessagesHub() {
         setMeetingDate('');
       }, 3000);
     } else {
-      setMeetingStatus('idle');
+      setMeetingStatus('error');
     }
   };
 
@@ -168,6 +171,25 @@ export default function MessagesHub() {
               </motion.div>
             ) : (
               <form onSubmit={handleRequestSlot}>
+                {meetingStatus === 'error' && (
+                  <div
+                    style={{
+                      background: 'var(--danger-light)',
+                      color: 'var(--danger)',
+                      border: '1px solid rgba(239, 68, 68, 0.15)',
+                      padding: '0.75rem 1rem',
+                      borderRadius: 'var(--radius-md)',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontWeight: 600,
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    Failed to send meeting request. Please try again.
+                  </div>
+                )}
                 <div className="form-group">
                   <label className="meeting-label">Preferred Date</label>
                   <input
@@ -243,6 +265,22 @@ export default function MessagesHub() {
                   </motion.div>
                 ) : (
                   <form onSubmit={handleReply}>
+                    {replyError && (
+                      <div
+                        style={{
+                          background: 'var(--danger-light)',
+                          color: 'var(--danger)',
+                          border: '1px solid rgba(239, 68, 68, 0.15)',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: 'var(--radius-sm)',
+                          marginBottom: '0.75rem',
+                          fontWeight: 600,
+                          fontSize: '0.85rem'
+                        }}
+                      >
+                        Failed to send reply. Please try again.
+                      </div>
+                    )}
                     <div className="form-group">
                       <select
                         className="form-control"
@@ -262,7 +300,7 @@ export default function MessagesHub() {
                         type="button"
                         className="btn-secondary"
                         style={{ flex: 1 }}
-                        onClick={() => { setSelectedMsg(null); setReplyValue(''); }}
+                        onClick={() => { setSelectedMsg(null); setReplyValue(''); setReplyError(false); }}
                       >
                         Cancel
                       </button>

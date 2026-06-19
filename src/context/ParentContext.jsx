@@ -132,27 +132,14 @@ export const ParentProvider = ({ children }) => {
           });
         }
 
-        // Fallback CBC details if no backend grades present
-        const defaultCbc = {
-          'Mathematics': 'Proficient',
-          'English Language': 'Exemplary',
-          'Kiswahili': 'Developing',
-          'Environmental Science': 'Proficient',
-          'Creative Arts': 'Beginning'
-        };
-        const finalCbc = Object.keys(cbcProgress).length > 0 ? cbcProgress : defaultCbc;
+        const finalCbc = cbcProgress;
 
         // 4. Fetch live Fees Ledger from D1 Backend
         let fees = {
-          totalBalance: 40000,
+          totalBalance: 0,
           paidAmount: 0,
           currency: 'KES',
-          breakdown: [
-            { name: 'Tuition Fee', cost: 25000 },
-            { name: 'Meals & Food Program', cost: 6000 },
-            { name: 'Creative Activities & Sports', cost: 3500 },
-            { name: 'School Transport Bus', cost: 5500 }
-          ],
+          breakdown: [],
           history: []
         };
         try {
@@ -267,40 +254,12 @@ export const ParentProvider = ({ children }) => {
           ...prev,
           messages: [res.sentMessage, ...prev.messages]
         }));
-      } else {
-        const fallbackMsg = {
-          id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
-          senderId: currentParent?.userId || '',
-          sender: currentParent?.name || 'Parent',
-          receiverId,
-          subject,
-          text: content,
-          read: true,
-          date: new Date().toISOString().split('T')[0]
-        };
-        setData(prev => ({
-          ...prev,
-          messages: [fallbackMsg, ...prev.messages]
-        }));
+        return true;
       }
-      return true;
+      return false;
     } catch (err) {
       console.error('Failed to send message:', err);
-      const fallbackMsg = {
-        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
-        senderId: currentParent?.userId || '',
-        sender: currentParent?.name || 'Parent',
-        receiverId,
-        subject,
-        text: content,
-        read: true,
-        date: new Date().toISOString().split('T')[0]
-      };
-      setData(prev => ({
-        ...prev,
-        messages: [fallbackMsg, ...prev.messages]
-      }));
-      return true;
+      return false;
     }
   };
 
