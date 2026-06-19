@@ -1,30 +1,32 @@
 import React from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Presentation, AlertTriangle, BookOpen, Zap, Users, CircleDollarSign, Settings as SettingsIcon, ClipboardList } from 'lucide-react';
+import { GraduationCap, Presentation, AlertTriangle, BookOpen, Shield, ClipboardList, RefreshCw } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-function MetricCard({ label, value, icon, colorClass, change }) {
+function MetricCard({ label, value, icon, colorClass, change, onClick }) {
   return (
-    <div className={`metric-card ${colorClass}`}>
+    <motion.div 
+      className={`metric-card ${colorClass}`}
+      onClick={onClick}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      whileHover={onClick ? { y: -4, boxShadow: '0 8px 16px rgba(0,0,0,0.06)' } : {}}
+      transition={{ duration: 0.2 }}
+    >
       <div className="metric-icon" style={{ background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span>{icon}</span>
       </div>
       <div className="metric-value">{value ?? <span className="skeleton" style={{ width: 60, height: 28, display: 'inline-block' }} />}</div>
       <div className="metric-label">{label}</div>
       {change && <div className="metric-change">{change}</div>}
-    </div>
+    </motion.div>
   );
 }
 
 export default function Dashboard() {
-  const { t, metrics, activity, pushActivity } = useAdmin();
+  const { t, metrics, activity, auditLog, pushActivity, users } = useAdmin();
   const navigate = useNavigate();
 
-  const handleQuickNav = (path) => {
-    navigate('/admin' + path);
-  };
-
-  const { users } = useAdmin();
   const totalUsers = users.length || 1;
   const numStudents = metrics.totalStudents;
   const numParents = users.filter(u => u.role === 'parent' || u.role === 'guardian').length;
@@ -40,25 +42,50 @@ export default function Dashboard() {
   const dashTeachers = (pctTeachers / 100) * C;
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="page-header">
         <h1>{t('dashboard')}</h1>
-        <p>School-wide overview and quick actions</p>
+        <p>School-wide overview and security metrics</p>
       </div>
 
-      {/* Metrics */}
+      {/* Metrics (Interactive & Clickable) */}
       <div className="metrics-grid">
-        <MetricCard label={t('totalStudents')} value={metrics.totalStudents} icon={<GraduationCap size={20} />} colorClass="indigo" change="+2 this term" />
-        <MetricCard label={t('totalTeachers')} value={metrics.totalTeachers} icon={<Presentation size={20} />} colorClass="green" />
-        <MetricCard label={t('pendingFees')} value={`KES ${metrics.pendingFees.toLocaleString()}`} icon={<AlertTriangle size={20} />} colorClass="yellow" />
-        <MetricCard label={t('activeClasses')} value={metrics.activeClasses} icon={<BookOpen size={20} />} colorClass="blue" />
+        <MetricCard 
+          label={t('totalStudents')} 
+          value={metrics.totalStudents} 
+          icon={<GraduationCap size={20} />} 
+          colorClass="indigo" 
+          change="+2 this term"
+          onClick={() => navigate('/admin/users')}
+        />
+        <MetricCard 
+          label={t('totalTeachers')} 
+          value={metrics.totalTeachers} 
+          icon={<Presentation size={20} />} 
+          colorClass="green" 
+          onClick={() => navigate('/admin/users')}
+        />
+        <MetricCard 
+          label={t('pendingFees')} 
+          value={`KES ${metrics.pendingFees.toLocaleString()}`} 
+          icon={<AlertTriangle size={20} />} 
+          colorClass="yellow" 
+          onClick={() => navigate('/admin/finance')}
+        />
+        <MetricCard 
+          label={t('activeClasses')} 
+          value={metrics.activeClasses} 
+          icon={<BookOpen size={20} />} 
+          colorClass="blue" 
+          onClick={() => navigate('/admin/classes')}
+        />
       </div>
 
       {/* Visual Analytics Overview */}
-      <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 20, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '20px' }}>
         
         {/* Chart 1: Enrollment Donut */}
-        <div className="card" style={{ flex: 1, minWidth: 280 }}>
+        <div className="card" style={{ minWidth: 280 }}>
           <div className="card-header">
             <div>
               <div className="card-title">Enrollment Distribution</div>
@@ -90,7 +117,7 @@ export default function Dashboard() {
         </div>
 
         {/* Chart 2: Fee Collections curved Area */}
-        <div className="card" style={{ flex: 1, minWidth: 280 }}>
+        <div className="card" style={{ minWidth: 280 }}>
           <div className="card-header">
             <div>
               <div className="card-title">Fee Collections</div>
@@ -131,56 +158,73 @@ export default function Dashboard() {
 
       </div>
 
-      {/* Quick Actions */}
-      <div className="card" style={{ marginBottom: 20 }}>
-        <div className="card-header">
-          <div>
-            <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={18} /> {t('quickActions')}</div>
-          </div>
-        </div>
-        <div className="quick-actions">
-          {[
-            { label: t('manageUsers'), path: '/users', icon: <Users size={16} /> },
-            { label: t('setupClasses'), path: '/classes', icon: <BookOpen size={16} /> },
-            { label: t('viewFinance'), path: '/finance', icon: <CircleDollarSign size={16} /> },
-            { label: t('systemSettings'), path: '/settings', icon: <SettingsIcon size={16} /> },
-          ].map(a => (
-            <button key={a.path} className="quick-btn" onClick={() => handleQuickNav(a.path)}>
-              <span style={{ display: 'flex', alignItems: 'center' }}>{a.icon}</span> {a.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Activity log */}
-      <div className="card">
-        <div className="card-header">
-          <div>
-            <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ClipboardList size={18} /> {t('recentActivity')}</div>
-            <div className="card-subtitle">Live system events</div>
-          </div>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => pushActivity('Admin Super', 'viewed dashboard', '')}
-          >
-            Refresh
-          </button>
-        </div>
-        <div className="activity-list">
-          {activity.length === 0 && (
-            <div className="empty"><p>No recent activity.</p></div>
-          )}
-          {activity.map(a => (
-            <div key={a.id} className="activity-item">
-              <div className="activity-dot" style={{ background: a.color }} />
-              <div className="activity-text">
-                <strong>{a.user}</strong> {a.action}
-                {a.detail && <> — <em>{a.detail}</em></>}
-              </div>
-              <div className="activity-time">{a.time}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        
+        {/* Security & Audit Log (Replaces redundant Quick Actions) */}
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Shield size={18} className="text-red-500" /> Security & System Audits</div>
+              <div className="card-subtitle">Recent administrative operations</div>
             </div>
-          ))}
+            <button 
+              className="btn btn-ghost btn-sm"
+              onClick={() => navigate('/admin/settings')}
+            >
+              Configure
+            </button>
+          </div>
+          <div className="divide-y divide-slate-100 px-6 py-2">
+            {auditLog && auditLog.length > 0 ? (
+              auditLog.slice(0, 4).map((log) => (
+                <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{log.action}</p>
+                    <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>User: <strong>{log.user}</strong></p>
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>{log.time.split(' ')[1] || log.time}</span>
+                </div>
+              ))
+            ) : (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                No audit entries recorded.
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Activity log */}
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ClipboardList size={18} /> {t('recentActivity')}</div>
+              <div className="card-subtitle">Live system events</div>
+            </div>
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => pushActivity('Admin Super', 'viewed dashboard', '')}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              <RefreshCw size={12} /> Refresh
+            </button>
+          </div>
+          <div className="activity-list">
+            {activity.length === 0 && (
+              <div className="empty"><p>No recent activity.</p></div>
+            )}
+            {activity.map(a => (
+              <div key={a.id} className="activity-item">
+                <div className="activity-dot" style={{ background: a.color }} />
+                <div className="activity-text">
+                  <strong>{a.user}</strong> {a.action}
+                  {a.detail && <> — <em>{a.detail}</em></>}
+                </div>
+                <div className="activity-time">{a.time}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );
