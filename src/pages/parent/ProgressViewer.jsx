@@ -20,6 +20,42 @@ export default function ProgressViewer() {
     }
   };
 
+  const getCbcPercentage = (level) => {
+    switch (level) {
+      case 'Beginning': return 25;
+      case 'Developing': return 50;
+      case 'Proficient': return 75;
+      case 'Exemplary': return 100;
+      default: return 50;
+    }
+  };
+
+  const getCbcColor = (level) => {
+    switch (level) {
+      case 'Beginning': return 'var(--primary)';
+      case 'Developing': return 'var(--warning)';
+      case 'Proficient': return 'var(--secondary)';
+      case 'Exemplary': return 'var(--danger)';
+      default: return 'var(--primary)';
+    }
+  };
+
+  const progressEntries = Object.entries(activeChild.progress || {});
+  const totalSubjects = progressEntries.length;
+
+  const levelCounts = {
+    Beginning: 0,
+    Developing: 0,
+    Proficient: 0,
+    Exemplary: 0
+  };
+
+  progressEntries.forEach(([_, level]) => {
+    if (levelCounts[level] !== undefined) {
+      levelCounts[level]++;
+    }
+  });
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -42,25 +78,105 @@ export default function ProgressViewer() {
       </div>
 
       {activeTab === 'progress' && (
-        <div className="progress-grid">
-          {Object.entries(activeChild.progress).map(([subject, level]) => (
-            <div key={subject} className="progress-card">
-              <div className="progress-header">
-                <h3 style={{ margin: 0, fontSize: '1.125rem' }}>{subject}</h3>
-                <span className={`skill-tag ${getTagClass(level)}`}>{level}</span>
+        <>
+          {totalSubjects > 0 && (
+            <div className="glass-card" style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '1px' }}>Academic Overview</span>
+                <h2 className="section-title" style={{ margin: '0.25rem 0 0.5rem 0', fontFamily: 'Outfit, sans-serif' }}>CBC Evaluation Breakdown</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+                  Summary of {activeChild.name}'s learning outcomes across all registered subjects.
+                </p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.5rem' }}>
+                  <div style={{ display: 'flex', height: '12px', borderRadius: '6px', overflow: 'hidden', background: 'var(--border-color)' }}>
+                    {Object.entries(levelCounts).map(([level, count]) => {
+                      if (count === 0) return null;
+                      const width = `${(count / totalSubjects) * 100}%`;
+                      return (
+                        <motion.div
+                          key={level}
+                          style={{ width, background: getCbcColor(level) }}
+                          initial={{ width: 0 }}
+                          animate={{ width }}
+                          transition={{ duration: 0.8, ease: 'easeOut' }}
+                        />
+                      );
+                    })}
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '0.5rem' }}>
+                    {Object.entries(levelCounts).map(([level, count]) => {
+                      if (count === 0) return null;
+                      return (
+                        <div key={level} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getCbcColor(level) }} />
+                          <span style={{ color: 'var(--text-main)' }}>{level}: {count} ({Math.round((count / totalSubjects) * 100)}%)</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-              <div style={{ height: '8px', background: 'var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div 
-                  style={{ 
-                    height: '100%', 
-                    background: 'var(--primary)', 
-                    width: level === 'Beginning' ? '25%' : level === 'Developing' ? '50%' : level === 'Proficient' ? '75%' : '100%' 
-                  }} 
-                />
+
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '2.5rem', fontFamily: 'Outfit, sans-serif', fontWeight: 800, color: 'var(--secondary)' }}>
+                    {levelCounts.Exemplary + levelCounts.Proficient}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Strong Areas</div>
+                </div>
+                <div style={{ width: '1px', height: '50px', background: 'var(--border-color)' }} />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '2.5rem', fontFamily: 'Outfit, sans-serif', fontWeight: 800, color: 'var(--warning)' }}>
+                    {levelCounts.Developing + levelCounts.Beginning}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Support Needed</div>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
+          )}
+
+          <div className="progress-grid">
+            {progressEntries.map(([subject, level]) => (
+              <div key={subject} className="progress-card" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>CBC Assessment</span>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.3 }}>{subject}</h3>
+                  <div>
+                    <span className={`skill-tag ${getTagClass(level)}`}>{level}</span>
+                  </div>
+                </div>
+                
+                <div className="circular-meter" style={{ position: 'relative', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg className="circular-svg" width="80" height="80" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+                    <circle
+                      className="circular-bg"
+                      cx="40"
+                      cy="40"
+                      r="30"
+                      style={{ fill: 'none', stroke: 'var(--border-color)', strokeWidth: 6 }}
+                    />
+                    <motion.circle
+                      className="circular-fill"
+                      cx="40"
+                      cy="40"
+                      r="30"
+                      style={{ fill: 'none', stroke: getCbcColor(level), strokeWidth: 6, strokeLinecap: 'round' }}
+                      strokeDasharray={2 * Math.PI * 30}
+                      initial={{ strokeDashoffset: 2 * Math.PI * 30 }}
+                      animate={{ strokeDashoffset: 2 * Math.PI * 30 * (1 - getCbcPercentage(level) / 100) }}
+                      transition={{ duration: 1.2, ease: 'easeOut' }}
+                    />
+                  </svg>
+                  <div className="circular-val" style={{ position: 'absolute', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.1rem', color: getCbcColor(level) }}>
+                    {getCbcPercentage(level)}%
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {activeTab === 'gallery' && (

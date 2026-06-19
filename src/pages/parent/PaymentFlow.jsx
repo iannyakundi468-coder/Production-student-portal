@@ -39,16 +39,55 @@ export default function PaymentFlow() {
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="stat-card" style={{ marginBottom: '1.5rem', background: 'linear-gradient(135deg, var(--danger), #B91C1C)', color: 'white' }}>
-        <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>{t.currentBalance}</div>
-        <div style={{ fontSize: '2rem', fontWeight: 700 }}>
+      <div className="balance-card" style={{ marginBottom: '2rem' }}>
+        <div className="balance-label">{t.currentBalance}</div>
+        <div className="balance-amount">
           {activeChild.fees.currency} {activeChild.fees.totalBalance.toLocaleString()}
+        </div>
+        <div className="balance-meta">
+          <div className="balance-meta-item">
+            <span className="balance-meta-lbl">Paid Amount</span>
+            <span className="balance-meta-val">
+              {activeChild.fees.currency} {(activeChild.fees.paidAmount || 0).toLocaleString()}
+            </span>
+          </div>
+          <div className="balance-meta-item">
+            <span className="balance-meta-lbl">Total Fee Structure</span>
+            <span className="balance-meta-val">
+              {activeChild.fees.currency} {((activeChild.fees.paidAmount || 0) + activeChild.fees.totalBalance).toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
 
       <h2 className="section-title">{t.checkout}</h2>
       
-      {status === 'success' ? (
+      {status === 'loading' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+          {method === 'mpesa' ? (
+            <div className="mpesa-sim-box">
+              <div className="mpesa-logo-sim" style={{ color: '#4ade80', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-1px', marginBottom: '1rem' }}>M-PESA PUSH SIMULATOR</div>
+              <p style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', opacity: 0.9 }}>
+                Please check your phone for the M-Pesa STK PIN Prompt...
+              </p>
+              <div className="mpesa-spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(255, 255, 255, 0.1)', borderTopColor: '#4ade80', borderRadius: '50%', margin: '1.5rem auto' }} />
+              <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.7 }}>
+                Processing payment of {activeChild.fees.currency} {Number(amount).toLocaleString()}
+              </p>
+            </div>
+          ) : (
+            <div style={{ background: 'var(--surface)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--shadow-md)' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                <CreditCard size={48} className="login-spinner" style={{ animation: 'spin 1.5s linear infinite', border: 'none', color: 'var(--primary)' }} />
+              </div>
+              <h3 style={{ margin: '0 0 0.5rem 0' }}>Processing Credit Card</h3>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                Contacting your bank gateway. Do not refresh this page.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : status === 'success' ? (
         <div className="success-state">
           <CheckCircle className="success-icon" />
           <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{t.success}</h3>
@@ -93,11 +132,7 @@ export default function PaymentFlow() {
             style={{ width: '100%' }}
             disabled={status === 'loading'}
           >
-            {status === 'loading' ? (
-              <div className="loader" style={{ padding: 0 }}><CreditCard size={20} /> Processing...</div>
-            ) : (
-              <><CreditCard size={20} /> {t.payNow}</>
-            )}
+            <CreditCard size={20} /> {t.payNow}
           </button>
         </form>
       )}
