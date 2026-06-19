@@ -1,8 +1,9 @@
 import { useTeacher } from '../../context/TeacherContext';
-import { Users, BookOpen, Clock, TrendingUp, Award, Star, Zap, Check, ChevronRight, ArrowUpRight, Download, Loader2, Sparkles, CalendarSync } from 'lucide-react';
+import { Users, BookOpen, Clock, Award, ChevronRight, ArrowUpRight, Download, Loader2, Sparkles, CalendarSync } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
+import { motion } from 'framer-motion';
 
 export default function TeacherDashboard() {
   const { teacherData } = useTeacher();
@@ -10,6 +11,27 @@ export default function TeacherDashboard() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiRecommendation, setAiRecommendation] = useState(null);
+  
+  const [timetable, setTimetable] = useState(null);
+  const [loadingTimetable, setLoadingTimetable] = useState(true);
+
+  useEffect(() => {
+    fetchMyTimetable();
+  }, []);
+
+  const fetchMyTimetable = async () => {
+    try {
+      setLoadingTimetable(true);
+      const res = await api.get('/teacher/timetable');
+      if (res.timetable) {
+        setTimetable(res.timetable);
+      }
+    } catch (err) {
+      console.error('Failed to load timetable on dashboard:', err);
+    } finally {
+      setLoadingTimetable(false);
+    }
+  };
 
   const handleAnalyzeTimetable = async () => {
     setIsAnalyzing(true);
@@ -69,10 +91,10 @@ export default function TeacherDashboard() {
   ];
 
   const stats = [
-    { label: 'Total Learners', value: teacherData?.classes?.reduce((acc, c) => acc + (c.students?.length || 0), 0) || 0, icon: Users, color: 'text-blue-600', trend: 'Current' },
-    { label: 'Classes', value: teacherData?.classes?.length || 0, icon: Award, color: 'text-indigo-600', trend: 'Stable' },
-    { label: 'Submissions', value: teacherData?.portfolioItems?.length || 0, icon: BookOpen, color: 'text-amber-600', trend: 'Total' },
-    { label: 'Attendance Rate', value: attendanceRate, icon: Clock, color: 'text-emerald-600', trend: 'Overall' },
+    { label: 'Total Learners', value: teacherData?.classes?.reduce((acc, c) => acc + (c.students?.length || 0), 0) || 0, icon: Users, color: 'text-blue-605 text-blue-600', trend: 'Assess &rarr;', path: '/teacher/classes' },
+    { label: 'Classes', value: teacherData?.classes?.length || 0, icon: Award, color: 'text-indigo-605 text-indigo-600', trend: 'Manage &rarr;', path: '/teacher/classes' },
+    { label: 'Submissions', value: teacherData?.portfolioItems?.length || 0, icon: BookOpen, color: 'text-amber-655 text-amber-600', trend: 'Manage &rarr;', path: '/teacher/portfolio' },
+    { label: 'Attendance Rate', value: attendanceRate, icon: Clock, color: 'text-emerald-605 text-emerald-600', trend: 'Track &rarr;', path: '/teacher/classes' },
   ];
 
   return (
@@ -93,32 +115,32 @@ export default function TeacherDashboard() {
             {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
             {isDownloading ? 'Generating...' : 'Download Report'}
           </button>
-          <button 
-            onClick={() => navigate('/teacher/classes')}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2"
-          >
-            <Users size={16} /> Assess Learners
-          </button>
         </div>
       </div>
 
       {/* Metric Cards - SaaS Style */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-white p-6 border border-slate-200 rounded-lg shadow-sm hover:border-indigo-200 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-2 rounded bg-white border border-slate-100 ${stat.color}`}>
-                <stat.icon size={20} />
+          <motion.div 
+            key={stat.label} 
+            className="bg-white p-6 border border-slate-200 rounded-lg shadow-sm hover:border-indigo-250 cursor-pointer transition-all flex flex-col justify-between"
+            whileHover={{ y: -4, boxShadow: '0 10px 20px rgba(0,0,0,0.05)', borderColor: 'var(--primary)' }}
+            onClick={() => navigate(stat.path)}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-2 rounded bg-slate-50 border border-slate-100 ${stat.color}`}>
+                  <stat.icon size={20} />
+                </div>
+                <span 
+                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 uppercase"
+                  dangerouslySetInnerHTML={{ __html: stat.trend }}
+                />
               </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                stat.trend.startsWith('+') ? 'bg-emerald-50 text-emerald-700' : 'bg-white border border-slate-100 text-slate-600'
-              }`}>
-                {stat.trend}
-              </span>
+              <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">{stat.label}</p>
-          </div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-2">{stat.label}</p>
+          </motion.div>
         ))}
       </div>
 
@@ -150,7 +172,7 @@ export default function TeacherDashboard() {
                     </span>
                     <div 
                       className="w-full rounded-t transition-all duration-300 hover:scale-x-105"
-                      style={{ height: `${d.value * 1.5}px`, backgroundColor: d.color }}
+                      style={{ height: `${d.value * 1.2}px`, backgroundColor: d.color }}
                     />
                     <span className="text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-wider text-center">{d.label.split(' ')[0]}</span>
                   </div>
@@ -215,7 +237,7 @@ export default function TeacherDashboard() {
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <h2 className="font-bold text-slate-900">Recent Activity</h2>
               <button 
-                onClick={() => alert('Full activity history is synced dynamically.')}
+                onClick={() => navigate('/teacher/portfolio')}
                 className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
               >
                 View History
@@ -224,7 +246,7 @@ export default function TeacherDashboard() {
             <div className="divide-y divide-slate-100">
               {teacherData?.portfolioItems?.length > 0 ? (
                 teacherData.portfolioItems.slice(0, 4).map((activity, i) => (
-                  <div key={i} className="px-6 py-4 flex items-center justify-between group hover:bg-slate-50 transition-colors">
+                  <div key={i} className="px-6 py-4 flex items-center justify-between group hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => navigate('/teacher/portfolio')}>
                     <div className="flex items-center gap-4">
                       <div className="p-2 rounded-full bg-white border border-slate-100 text-blue-500">
                         <BookOpen size={16} />
@@ -251,7 +273,7 @@ export default function TeacherDashboard() {
         <div className="space-y-6">
           <div className="bg-white border border-slate-200 rounded-lg p-6 text-slate-900 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
-              <Zap size={18} className="text-indigo-600" />
+              <Sparkles size={18} className="text-indigo-600" />
               <h3 className="font-bold text-sm uppercase tracking-widest text-slate-500">CBC Insights</h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
@@ -306,29 +328,57 @@ export default function TeacherDashboard() {
             )}
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-lg p-6">
-            <h3 className="font-bold text-slate-900 mb-4">Quick Actions</h3>
-            <div className="space-y-2">
+          {/* Today's Schedule Card (Replaces redundant Quick Actions) */}
+          <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-800 text-sm">Today's Schedule</h3>
               <button 
-                onClick={() => navigate('/teacher/classes')}
-                className="w-full text-left px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 border border-transparent hover:border-slate-100 rounded transition-all"
+                onClick={() => navigate('/teacher/timetable')}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
               >
-                Mark Attendance
-              </button>
-              <button 
-                onClick={() => navigate('/teacher/portfolio')}
-                className="w-full text-left px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 border border-transparent hover:border-slate-100 rounded transition-all"
-              >
-                New Portfolio Entry
-              </button>
-              <button 
-                onClick={() => alert('Meeting scheduler feature coming soon!')}
-                className="w-full text-left px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 border border-transparent hover:border-slate-100 rounded transition-all"
-              >
-                Schedule Meeting
+                Full View
               </button>
             </div>
+            
+            {loadingTimetable ? (
+              <div className="flex justify-center py-6 text-slate-400">
+                <Loader2 size={20} className="animate-spin" />
+              </div>
+            ) : timetable && timetable.schedule ? (
+              (() => {
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const todayName = days[new Date().getDay()];
+                // Find schedule for today, or default to the first available day
+                const todaySchedule = timetable.schedule.find(s => s.day.toLowerCase() === todayName.toLowerCase()) || timetable.schedule[0];
+                
+                if (!todaySchedule || !todaySchedule.slots || todaySchedule.slots.length === 0) {
+                  return (
+                    <p className="text-xs text-slate-450 text-center py-4">No classes scheduled for today.</p>
+                  );
+                }
+                
+                return (
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Schedule for {todaySchedule.day}</p>
+                    {todaySchedule.slots.map((slot, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-lg hover:border-indigo-150 transition-colors">
+                        <div>
+                          <p className="text-xs font-bold text-slate-850 text-slate-800">{slot.subject}</p>
+                          <p className="text-[10px] text-slate-500 font-semibold">{slot.class}</p>
+                        </div>
+                        <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">
+                          {slot.time}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()
+            ) : (
+              <p className="text-xs text-slate-400 text-center py-4">No schedule data available.</p>
+            )}
           </div>
+
         </div>
 
       </div>
