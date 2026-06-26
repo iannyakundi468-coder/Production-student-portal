@@ -13,6 +13,9 @@ export function AdminProvider({ children }) {
   const [auditLog, setAuditLog] = useState([]);
   const [config, setConfig] = useState({ language: 'en' });
   const [loading, setLoading] = useState(true);
+  const [delegations, setDelegations] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   
   const [currentAdmin, setCurrentAdmin] = useState(() => {
     try {
@@ -25,14 +28,17 @@ export function AdminProvider({ children }) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [usersRes, classesRes, activityRes, auditRes, configRes, feeStructuresRes, paymentsRes] = await Promise.all([
-        api.get('/admin/users'),
-        api.get('/admin/classes'),
+      const [usersRes, classesRes, activityRes, auditRes, configRes, feeStructuresRes, paymentsRes, delegationsRes, enrollmentsRes, announcementsRes] = await Promise.all([
+        api.get('/admin/users').catch(() => ({ users: [] })),
+        api.get('/admin/classes').catch(() => ({ classes: [] })),
         api.get('/admin/activity').catch(() => ({ activity: [] })),
         api.get('/admin/audit').catch(() => ({ auditLog: [] })),
         api.get('/admin/config').catch(() => ({ config: { language: 'en' } })),
         api.get('/admin/fees/structures').catch(() => ({ feeStructures: [] })),
-        api.get('/admin/payments').catch(() => ({ payments: [] }))
+        api.get('/admin/payments').catch(() => ({ payments: [] })),
+        api.get('/admin/delegations').catch(() => ({ delegations: [] })),
+        api.get('/admin/enrollments').catch(() => ({ enrollments: [] })),
+        api.get('/admin/announcements').catch(() => ({ announcements: [] }))
       ]);
       setUsers(usersRes.users || []);
       setClasses(classesRes.classes || []);
@@ -41,12 +47,19 @@ export function AdminProvider({ children }) {
       setConfig(configRes.config || { language: 'en' });
       setFeeStructures(feeStructuresRes.feeStructures || []);
       setPayments(paymentsRes.payments || []);
+      setDelegations(delegationsRes.delegations || []);
+      setEnrollments(enrollmentsRes.enrollments || []);
+      setAnnouncements(announcementsRes.announcements || []);
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const refreshAdminData = () => {
+    fetchData();
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('somobloom_token');
@@ -298,16 +311,53 @@ export function AdminProvider({ children }) {
     failedPayments: payments.filter(p => p.status === 'failed' || p.status === 'overdue').length,
   };
 
+  const toggleDelegation = async (teacherProfileId, responsibility) => {
+    try {
+      const res = await api.post('/admin/delegations/toggle', { teacherProfileId, responsibility });
+      setDelegations(res.delegations || []);
+      pushAudit(`Toggled ${responsibility} delegation for teacher ID ${teacherProfileId}`);
+    } catch (err) {
+      console.error('Failed to toggle delegation:', err);
+      alert(err.message || 'Failed to toggle delegation');
+    }
+  };
+
+  const updateEnrollmentStatus = async (id, status) => {
+    try {
+      await api.put(`/admin/enrollments/${id}`, { status });
+      setEnrollments(prev => prev.map(e => e.id === id ? { ...e, status } : e));
+      pushAudit(`Updated enrollment application ID ${id} status to ${status}`);
+    } catch (err) {
+      console.error('Failed to update enrollment status:', err);
+      alert(err.message || 'Failed to update enrollment status');
+    }
+  };
+
+  const addAnnouncement = async (announcement) => {
+    try {
+      await api.post('/admin/announcements', announcement);
+      const listRes = await api.get('/admin/announcements').catch(() => ({ announcements: [] }));
+      setAnnouncements(listRes.announcements || []);
+      pushAudit(`Created announcement: ${announcement.title}`);
+    } catch (err) {
+      console.error('Failed to create announcement:', err);
+      alert(err.message || 'Failed to create announcement');
+    }
+  };
+
   return (
     <AdminContext.Provider value={{
       users, classes, payments, activity, auditLog, config, currentAdmin, metrics, feeStructures,
+      delegations, enrollments, announcements,
       t, addUser, updateUser, deactivateUser, deleteUser,
       addClass, updateClass, enrollStudent, removeStudent,
-      updateConfig, pushActivity, addFeeStructure, updateFeeStructure
+      updateConfig, pushActivity, addFeeStructure, updateFeeStructure,
+      toggleDelegation, updateEnrollmentStatus, refreshAdminData, addAnnouncement
     }}>
       {children}
     </AdminContext.Provider>
   );
+
 }
 
 export const useAdmin = () => {

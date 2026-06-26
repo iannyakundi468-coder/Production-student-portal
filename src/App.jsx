@@ -42,6 +42,9 @@ import AdminClassSetup from './pages/admin/ClassSetup';
 import AdminFinancialOverview from './pages/admin/FinancialOverview';
 import AdminSystemSettings from './pages/admin/SystemSettings';
 import AdminTimetable from './pages/admin/Timetable';
+import AdmissionsPanel from './pages/admin/AdmissionsPanel';
+import AnnouncementsPanel from './pages/admin/AnnouncementsPanel';
+
 
 function HomeRedirect() {
   const { user, isAuthenticated } = useAuth();
@@ -116,6 +119,12 @@ function App() {
                       <Route path="portfolio" element={<TeacherPortfolio />} />
                       <Route path="profile" element={<TeacherProfile />} />
                       <Route path="timetable" element={<TeacherTimetable />} />
+                      
+                      {/* Delegated Admin Panels */}
+                      <Route path="admissions" element={<AdmissionsPanel />} />
+                      <Route path="finance" element={<AdminFinancialOverview />} />
+                      <Route path="timetable/manage" element={<AdminTimetable />} />
+                      <Route path="announcements" element={<AnnouncementsPanel />} />
                     </Route>
 
                     {/* Admin Protected Routes */}
@@ -130,9 +139,11 @@ function App() {
                       <Route index element={<AdminDashboard />} />
                       <Route path="users" element={<AdminUserManagement />} />
                       <Route path="classes" element={<AdminClassSetup />} />
+                      <Route path="admissions" element={<AdmissionsPanel />} />
                       <Route path="finance" element={<AdminFinancialOverview />} />
                       <Route path="settings" element={<AdminSystemSettings />} />
                       <Route path="timetable" element={<AdminTimetable />} />
+                      <Route path="announcements" element={<AnnouncementsPanel />} />
                     </Route>
 
                     {/* Fallback Redirect */}

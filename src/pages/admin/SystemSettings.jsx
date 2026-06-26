@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
-import { Globe, Gamepad2, Bell, Lock, Database, ClipboardList, Settings as SettingsIcon, AlertTriangle } from 'lucide-react';
+import { Globe, Gamepad2, Bell, Lock, Database, ClipboardList, Settings as SettingsIcon, AlertTriangle, Users } from 'lucide-react';
 
 const SECTIONS = [
   { id: 'general', label: 'General', icon: <Globe size={18} /> },
@@ -28,8 +28,9 @@ function SettingRow({ label, desc, children }) {
 }
 
 export default function SystemSettings() {
-  const { config, updateConfig, auditLog } = useAdmin();
+  const { config, updateConfig, auditLog, users, delegations, toggleDelegation } = useAdmin();
   const [active, setActive] = useState('general');
+
 
   return (
     <div>
@@ -104,6 +105,81 @@ export default function SystemSettings() {
               <SettingRow label="Student Leaderboard Visibility" desc="Let students view each other's XP ranking.">
                 <Toggle on={config.allowStudentLeaderboard} onChange={v => updateConfig({ allowStudentLeaderboard: v })} />
               </SettingRow>
+
+              <div style={{ margin: '24px 0 16px 0', borderTop: '1px solid var(--border)' }} />
+
+              <div className="card-title" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}><Users size={18} /> Responsibility Delegation</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
+                Delegate specific administrative modules to teachers. Delegated teachers will get access to these panels in their portals.
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--text-muted)' }}>
+                      <th style={{ textAlign: 'left', padding: '10px 8px' }}>Teacher</th>
+                      <th style={{ textAlign: 'left', padding: '10px 8px' }}>Department</th>
+                      <th style={{ textAlign: 'center', padding: '10px 8px' }}>Admissions</th>
+                      <th style={{ textAlign: 'center', padding: '10px 8px' }}>Finances</th>
+                      <th style={{ textAlign: 'center', padding: '10px 8px' }}>Timetable</th>
+                      <th style={{ textAlign: 'center', padding: '10px 8px' }}>Announcements</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.filter(u => u.role === 'teacher').map(teacher => {
+                      const teacherDelegations = delegations
+                        .filter(d => d.teacherProfileId === teacher.id)
+                        .map(d => d.responsibility);
+                      return (
+                        <tr key={teacher.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                          <td style={{ padding: '12px 8px' }}>
+                            <div style={{ fontWeight: 600 }}>{teacher.name}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{teacher.email}</div>
+                          </td>
+                          <td style={{ padding: '12px 8px' }}>{teacher.department || 'General'}</td>
+                          <td style={{ padding: '12px 8px', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 48 }}>
+                            <Toggle
+                              on={teacherDelegations.includes('admissions')}
+                              onChange={() => toggleDelegation(teacher.id, 'admissions')}
+                            />
+                          </td>
+                          <td style={{ padding: '12px 8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                              <Toggle
+                                on={teacherDelegations.includes('finances')}
+                                onChange={() => toggleDelegation(teacher.id, 'finances')}
+                              />
+                            </div>
+                          </td>
+                          <td style={{ padding: '12px 8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                              <Toggle
+                                on={teacherDelegations.includes('timetable')}
+                                onChange={() => toggleDelegation(teacher.id, 'timetable')}
+                              />
+                            </div>
+                          </td>
+                          <td style={{ padding: '12px 8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                              <Toggle
+                                on={teacherDelegations.includes('announcements')}
+                                onChange={() => toggleDelegation(teacher.id, 'announcements')}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {users.filter(u => u.role === 'teacher').length === 0 && (
+                      <tr>
+                        <td colSpan={6} style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>
+                          No teachers available to delegate responsibilities to.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
 

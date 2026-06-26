@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, User, LogOut, BookOpen, Users, Menu, Bell, Calendar } from 'lucide-react';
+import { LayoutDashboard, User, LogOut, BookOpen, Users, Menu, Bell, Calendar, FileText, Coins, Megaphone } from 'lucide-react';
 import { ErrorBoundary } from '../../common/ErrorBoundary';
 import { useTeacher } from '../../../context/TeacherContext';
 import { useAuth } from '../../../context/AuthContext';
@@ -24,8 +24,25 @@ export default function Layout() {
     { to: '/teacher/classes', label: 'My Classes', icon: Users },
     { to: '/teacher/portfolio', label: 'Portfolio Manager', icon: BookOpen },
     { to: '/teacher/timetable', label: 'My Timetable', icon: Calendar },
-    { to: '/teacher/profile', label: 'Settings', icon: User },
   ];
+
+  // Add delegated administrative views
+  const delegations = teacherData?.delegations || [];
+  if (delegations.includes('admissions')) {
+    navItems.push({ to: '/teacher/admissions', label: 'Admissions Panel', icon: FileText });
+  }
+  if (delegations.includes('finances')) {
+    navItems.push({ to: '/teacher/finance', label: 'Finance Panel', icon: Coins });
+  }
+  if (delegations.includes('timetable')) {
+    navItems.push({ to: '/teacher/timetable/manage', label: 'Manage Timetable', icon: Calendar });
+  }
+  if (delegations.includes('announcements')) {
+    navItems.push({ to: '/teacher/announcements', label: 'Announcements', icon: Megaphone });
+  }
+
+  navItems.push({ to: '/teacher/profile', label: 'Settings', icon: User });
+
 
   const handleLogout = () => {
     logout();
