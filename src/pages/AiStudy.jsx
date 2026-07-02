@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStudent } from '../context/StudentContext';
 import { Bot, Send, Lock, Sparkles } from 'lucide-react';
+import { api } from '../lib/api';
 
 export default function AiStudy() {
   const { studentData } = useStudent();
@@ -8,23 +9,44 @@ export default function AiStudy() {
     { id: 1, text: "Hi there! I'm your AI Study Assistant. What topic would you like to explore today?", sender: 'ai' }
   ]);
   const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  const handleSend = (e) => {
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  const handleSend = async (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isTyping) return;
 
-    const newMessage = { id: Date.now(), text: input, sender: 'student' };
+    const userText = input.trim();
+    const newMessage = { id: Date.now(), text: userText, sender: 'student' };
     setMessages(prev => [...prev, newMessage]);
     setInput('');
+    setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const res = await api.post('/student/ask-tutor', { prompt: userText });
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
-        text: `That's an interesting question about "${newMessage.text}". Here is a simple explanation to help you understand...`,
+        text: res.response || "I'm thinking... please try again.",
         sender: 'ai'
       }]);
-    }, 1000);
+    } catch (err) {
+      console.error('Failed to get response from AI Tutor:', err);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        text: "Sorry, I'm having trouble connecting to my AI brain right now. Please try again later.",
+        sender: 'ai'
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   if (!studentData?.aiStudyEnabled) {
@@ -69,6 +91,16 @@ export default function AiStudy() {
               </div>
             </div>
           ))}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-2xl p-4 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500 rounded-tl-none flex items-center gap-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
@@ -83,7 +115,7 @@ export default function AiStudy() {
             />
             <button
               type="submit"
-              disabled={!input.trim()}
+              disabled={!input.trim() || isTyping}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               <Send size={20} />
@@ -94,3 +126,4 @@ export default function AiStudy() {
     </div>
   );
 }
+
