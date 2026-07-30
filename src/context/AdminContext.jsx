@@ -347,7 +347,7 @@ export function AdminProvider({ children }) {
 
   return (
     <AdminContext.Provider value={{
-      users, classes, payments, activity, auditLog, config, currentAdmin, metrics, feeStructures,
+      users, classes, payments, activity, auditLog, config, currentAdmin, metrics, feeStructures, loading,
       delegations, enrollments, announcements,
       t, addUser, updateUser, deactivateUser, deleteUser,
       addClass, updateClass, enrollStudent, removeStudent,

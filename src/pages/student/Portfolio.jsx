@@ -19,8 +19,8 @@ export default function Portfolio() {
     : studentData?.portfolio;
 
   const marks = studentData?.marks || { rats: [], cats: [] };
-  const attendance = studentData?.attendance || { present: 0, total: 1 };
-  const attendancePercentage = ((attendance.present / attendance.total) * 100).toFixed(0);
+  const attendance = studentData?.attendance || { present: 0, total: 0 };
+  const attendancePercentage = attendance.total > 0 ? ((attendance.present / attendance.total) * 100).toFixed(0) : 0;
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">

@@ -3,18 +3,40 @@ import CourseCard from '../../components/dashboard/CourseCard';
 import TaskChecklist from '../../components/dashboard/TaskChecklist';
 import XPBar from '../../components/gamification/XPBar';
 import BadgeGrid from '../../components/gamification/BadgeGrid';
-import { Star, ArrowRight, User } from 'lucide-react';
+import { Star, ArrowRight, User, AlertCircle, RefreshCw, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
-  const { studentData } = useStudent();
+  const { studentData, isLoading, error, refreshData } = useStudent();
 
-  if (!studentData) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+        <p className="text-sm text-slate-500 font-medium">Loading student dashboard...</p>
       </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-200 dark:border-red-800">
+        <AlertCircle size={48} className="text-red-500 mb-4" />
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Unable to Load Production Student Data</h3>
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-6 text-sm">{error}</p>
+        <button
+          onClick={refreshData}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow"
+        >
+          <RefreshCw size={16} />
+          Retry Connection
+        </button>
+      </div>
+    );
+  }
+
+  if (!studentData) {
+    return null;
   }
 
   return (
@@ -39,7 +61,7 @@ export default function Dashboard() {
           </div>
           <div>
             <h2 className="text-3xl font-bold mb-1">Welcome back, {(studentData?.name || 'Student').split(' ')[0]}!</h2>
-            <p className="text-slate-800 font-medium">{studentData?.grade || ''}</p>
+            <p className="text-slate-800 font-medium">{studentData?.grade || 'Student Portal'}</p>
           </div>
         </div>
       </div>
@@ -64,11 +86,19 @@ export default function Dashboard() {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {(studentData.learningAreas || []).map(course => (
-                <CourseCard key={course.id} course={course} />
-              ))}
-            </div>
+            {studentData.learningAreas && studentData.learningAreas.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {studentData.learningAreas.map(course => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+                <BookOpen className="mx-auto text-slate-400 mb-3" size={36} />
+                <h4 className="font-semibold text-slate-700 dark:text-slate-300">No Learning Areas Registered</h4>
+                <p className="text-xs text-slate-500 mt-1">You are not assigned to any live classes at the moment.</p>
+              </div>
+            )}
           </section>
           
           <section>

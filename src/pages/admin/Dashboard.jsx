@@ -55,7 +55,6 @@ export default function Dashboard() {
           value={metrics.totalStudents} 
           icon={<GraduationCap size={20} />} 
           colorClass="indigo" 
-          change="+2 this term"
           onClick={() => navigate('/admin/users')}
         />
         <MetricCard 
