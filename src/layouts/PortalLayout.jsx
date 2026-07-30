@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, User, LogOut, GraduationCap, Menu, Bell, FolderGit2, Bot } from 'lucide-react';
+import { LayoutDashboard, User, LogOut, GraduationCap, Menu, Bell, FolderGit2, Bot, BookOpen } from 'lucide-react';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useStudent } from '../context/StudentContext';
 import GlobalAiAssistant from '../components/ai/GlobalAiAssistant';
@@ -14,7 +14,8 @@ export default function PortalLayout() {
 
   const navItems = [
     { to: '/student', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/student/portfolio', label: 'Portfolio', icon: FolderGit2 },
+    { to: '/student/learning-hub', label: 'Learning Hub', icon: BookOpen },
+    { to: '/student/portfolio', label: 'Portfolio & Progress', icon: FolderGit2 },
     { to: '/student/ai-study', label: 'AI Study Center', icon: Bot },
     { to: '/student/profile', label: 'Profile', icon: User },
   ];

@@ -18,6 +18,7 @@ import LoginPage from './pages/LoginPage';
 
 // Student Pages
 import StudentDashboard from './pages/student/Dashboard';
+import StudentLearningHub from './pages/student/LearningHub';
 import StudentAiStudy from './pages/student/AiStudy';
 import StudentPortfolio from './pages/student/Portfolio';
 import StudentProfile from './pages/student/Profile';
@@ -85,6 +86,7 @@ function App() {
                       }
                     >
                       <Route index element={<StudentDashboard />} />
+                      <Route path="learning-hub" element={<StudentLearningHub />} />
                       <Route path="ai-study" element={<StudentAiStudy />} />
                       <Route path="portfolio" element={<StudentPortfolio />} />
                       <Route path="profile" element={<StudentProfile />} />
