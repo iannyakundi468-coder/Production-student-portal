@@ -37,7 +37,7 @@ export function AdminProvider({ children }) {
         api.get('/admin/fees/structures').catch(() => ({ feeStructures: [] })),
         api.get('/admin/payments').catch(() => ({ payments: [] })),
         api.get('/admin/delegations').catch(() => ({ delegations: [] })),
-        api.get('/admin/enrollments').catch(() => ({ enrollments: [] })),
+        api.get('/admin/admissions').catch(() => api.get('/admin/enrollments')).catch(() => ({ enrollments: [] })),
         api.get('/admin/announcements').catch(() => ({ announcements: [] }))
       ]);
       setUsers(usersRes.users || []);
@@ -324,8 +324,18 @@ export function AdminProvider({ children }) {
 
   const updateEnrollmentStatus = async (id, status) => {
     try {
-      await api.put(`/admin/enrollments/${id}`, { status });
+      if (status === 'approved') {
+        await api.post(`/admin/admissions/${id}/approve`);
+      } else if (status === 'rejected') {
+        await api.post(`/admin/admissions/${id}/reject`);
+      } else {
+        await api.put(`/admin/enrollments/${id}`, { status });
+      }
       setEnrollments(prev => prev.map(e => e.id === id ? { ...e, status } : e));
+      // Refresh admin data to pull newly created users/student profiles if approved
+      if (status === 'approved') {
+        fetchData();
+      }
       pushAudit(`Updated enrollment application ID ${id} status to ${status}`);
     } catch (err) {
       console.error('Failed to update enrollment status:', err);
