@@ -7,26 +7,38 @@ export default function PaymentFlow() {
   const { activeChild, t, addPayment } = useParentContext();
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('mpesa');
+  const [phone, setPhone] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [status, setStatus] = useState('idle'); // idle, loading, success, error
   const [search, setSearch] = useState('');
 
   if (!activeChild) return null;
 
-  const handlePay = (e) => {
+  const handlePay = async (e) => {
     e.preventDefault();
-    if (!amount || isNaN(amount)) return;
+    if (!amount || isNaN(amount) || Number(amount) <= 0) return;
     
+    if (method === 'mpesa' && !phone.trim()) {
+      setErrorMessage('Please enter an M-Pesa phone number.');
+      setStatus('error');
+      return;
+    }
+
     setStatus('loading');
-    
-    // Simulate API call
-    setTimeout(() => {
-      if (Math.random() > 0.8) {
-        setStatus('error');
-      } else {
-        addPayment(activeChild.id, amount, method);
+    setErrorMessage('');
+
+    try {
+      const result = await addPayment(activeChild.id, amount, method, phone);
+      if (result && result.success) {
         setStatus('success');
+      } else {
+        setErrorMessage(result?.error || 'Payment failed. Please verify details and try again.');
+        setStatus('error');
       }
-    }, 1500);
+    } catch (err) {
+      setErrorMessage(err.message || 'Payment transaction failed.');
+      setStatus('error');
+    }
   };
 
   const filteredHistory = activeChild.fees.history.filter(tx => 
@@ -101,7 +113,7 @@ export default function PaymentFlow() {
           {status === 'error' && (
             <div style={{ background: '#FEE2E2', color: '#991B1B', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <AlertCircle size={20} />
-              {t.error}
+              {errorMessage || t.error}
             </div>
           )}
 
@@ -114,6 +126,7 @@ export default function PaymentFlow() {
               onChange={(e) => setAmount(e.target.value)}
               placeholder="e.g. 5000"
               required
+              min="1"
             />
           </div>
 
@@ -125,6 +138,23 @@ export default function PaymentFlow() {
               <option value="bank">Bank Transfer</option>
             </select>
           </div>
+
+          {method === 'mpesa' && (
+            <div className="form-group">
+              <label>M-PESA Phone Number</label>
+              <input 
+                type="tel" 
+                className="form-control" 
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="e.g. 0712345678"
+                required
+              />
+              <small style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'block', marginTop: '0.25rem' }}>
+                You will receive a Safaricom M-Pesa prompt on this phone to enter your secret PIN.
+              </small>
+            </div>
+          )}
 
           <button 
             type="submit" 

@@ -214,13 +214,15 @@ export const ParentProvider = ({ children }) => {
   const toggleLanguage = () => setLanguage(prev => prev === 'en' ? 'sw' : 'en');
 
   // Live Payment API Integration
-  const addPayment = async (studentId, amount, method) => {
+  const addPayment = async (studentId, amount, method, phoneNumber = '', term = '') => {
     try {
-      await api.post('/parent/payments', { studentId, amount, method });
+      const res = await api.post('/parent/payments', { studentId, amount, method, phoneNumber, term });
       // Refresh parent data to get the updated fees from the backend
       await fetchParentData();
+      return { success: true, message: res?.message || 'Payment recorded successfully' };
     } catch (err) {
       console.error('Failed to submit payment:', err);
+      return { success: false, error: err.message || 'Failed to submit payment' };
     }
   };
 
