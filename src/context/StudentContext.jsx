@@ -7,12 +7,12 @@ const StudentContext = createContext(null);
 // Highly detailed, realistic Kenyan CBC & CBE baseline mock state
 const CBC_SANDBOX_DATA = {
   isSandbox: true,
-  name: 'Solomon Nyakundi Jr.',
-  id: 'SB-2026-6819',
-  email: 'student@somobloom.com',
-  phone: '+254 712 345678',
-  grade: 'Grade 6 Junior School',
-  school: "St. Joseph's Kisii South Academy",
+  name: '',
+  id: '',
+  email: '',
+  phone: '',
+  grade: '',
+  school: '',
   avatarUrl: '',
   interests: 'Robotics, Agriculture, Drawing, Creative Writing',
   
@@ -208,10 +208,10 @@ export function StudentProvider({ children }) {
         isSandbox: false,
         name: profile.name,
         id: profile.id || `SB-${profile.phone || '2026'}`,
-        email: profile.email || 'student@somobloom.com',
+        email: profile.email || '',
         phone: profile.phone || '',
-        grade: profile.grade || 'Grade 6 Junior School',
-        school: profile.school || "St. Joseph's Kisii South Academy",
+        grade: profile.gradeLevel || profile.grade || '',
+        school: profile.school || profile.schoolName || '',
         avatarUrl: profile.avatarUrl || '',
         interests: profile.interests || '',
         learningAreas: (classes || []).map(c => ({

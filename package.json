@@ -1,14 +1,16 @@
 {
-  "name": "school-system",
+  "name": "somobloom-unified-portal",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:staging": "vite build --mode staging",
     "lint": "eslint .",
     "preview": "npm run build && wrangler dev",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:staging": "npm run build:staging && wrangler deploy --env staging"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

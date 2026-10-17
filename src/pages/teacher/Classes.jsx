@@ -680,9 +680,9 @@ export default function Classes() {
               <div className="text-center border-b-2 border-slate-800 pb-6 mb-6">
                 <div className="flex justify-center items-center gap-3 mb-2">
                   <div className="w-12 h-12 bg-indigo-600 rounded flex items-center justify-center text-white text-xl font-bold tracking-wider">
-                    SB
+                    {(teacherData?.schoolName || 'SB').substring(0, 2).toUpperCase()}
                   </div>
-                  <h1 className="text-2xl font-black uppercase tracking-wider text-slate-900">SomoBloom Academy</h1>
+                  <h1 className="text-2xl font-black uppercase tracking-wider text-slate-900">{teacherData?.schoolName || 'Academic Institution'}</h1>
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Official Academic Achievement Record</p>
               </div>
@@ -786,9 +786,9 @@ export default function Classes() {
               {/* Signatures block */}
               <div className="flex justify-between items-end pt-12 text-sm">
                 <div className="text-center flex flex-col items-center">
-                  <div className="w-32 border-b border-slate-400 pb-1 font-semibold italic text-slate-400">Wanjiku K.</div>
+                  <div className="w-32 border-b border-slate-400 pb-1 font-semibold italic text-slate-400">{teacherData?.name || 'Class Teacher'}</div>
                   <p className="font-bold text-slate-800 mt-2">Class Teacher</p>
-                  <p className="text-[10px] text-slate-400">SomoBloom Academy</p>
+                  <p className="text-[10px] text-slate-400">{teacherData?.schoolName || 'Institution'}</p>
                 </div>
                 <div className="text-center flex flex-col items-center">
                   <div className="w-32 border-b border-slate-400 pb-1 font-semibold italic text-slate-400">School Principal</div>
