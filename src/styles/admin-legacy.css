@@ -449,7 +449,6 @@
     animation: shimmer 1.5s infinite;
     border-radius: 4px;
   }
-  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
   /* ── Page header ── */
   .page-header { margin-bottom: 24px; }
@@ -499,4 +498,9 @@
     .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table { min-width: 600px; }
   }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }

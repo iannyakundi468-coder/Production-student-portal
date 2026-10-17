@@ -13,10 +13,6 @@ export default function Timetable() {
   const [teachersInput, setTeachersInput] = useState('Mr. Smith, Ms. Doe, Mrs. Wanjiku');
   const [subjectsInput, setSubjectsInput] = useState('Math, English, Kiswahili, Science, PE');
 
-  useEffect(() => {
-    fetchTimetable();
-  }, []);
-
   const fetchTimetable = async () => {
     try {
       setLoading(true);
@@ -31,6 +27,10 @@ export default function Timetable() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchTimetable();
+  }, []);
 
   const handleGenerate = async (e) => {
     e.preventDefault();

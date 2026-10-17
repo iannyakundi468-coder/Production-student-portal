@@ -15,10 +15,6 @@ export default function TeacherDashboard() {
   const [timetable, setTimetable] = useState(null);
   const [loadingTimetable, setLoadingTimetable] = useState(true);
 
-  useEffect(() => {
-    fetchMyTimetable();
-  }, []);
-
   const fetchMyTimetable = async () => {
     try {
       setLoadingTimetable(true);
@@ -32,6 +28,10 @@ export default function TeacherDashboard() {
       setLoadingTimetable(false);
     }
   };
+
+  useEffect(() => {
+    fetchMyTimetable();
+  }, []);
 
   const handleAnalyzeTimetable = async () => {
     setIsAnalyzing(true);
@@ -253,7 +253,7 @@ export default function TeacherDashboard() {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-slate-800">New portfolio entry: {activity.title}</p>
-                        <p className="text-xs text-slate-400">Portfolio • {new Date(activity.createdAt || Date.now()).toLocaleDateString()}</p>
+                        <p className="text-xs text-slate-400">Portfolio • {activity.createdAt ? new Date(activity.createdAt).toLocaleDateString() : 'Recent'}</p>
                       </div>
                     </div>
                     <ChevronRight size={16} className="text-slate-300 group-hover:translate-x-1 transition-transform" />

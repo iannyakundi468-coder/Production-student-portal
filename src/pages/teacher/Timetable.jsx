@@ -7,10 +7,6 @@ export default function Timetable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchMyTimetable();
-  }, []);
-
   const fetchMyTimetable = async () => {
     try {
       setLoading(true);
@@ -25,6 +21,10 @@ export default function Timetable() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchMyTimetable();
+  }, []);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
