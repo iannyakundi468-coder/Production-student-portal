@@ -37,7 +37,11 @@ function UserPanel({ user, onClose, onSave }) {
               <input className="input" value={form.name || ''} onChange={e => set('name', e.target.value)} placeholder="Jane Doe" />
             </div>
             <div className="form-group">
-              <label>Email</label>
+              <label>Phone Number (Kenya Mobile: 07... / 01...)</label>
+              <input className="input" type="tel" value={form.phoneNumber || form.phone || ''} onChange={e => { set('phoneNumber', e.target.value); set('phone', e.target.value); }} placeholder="0712 345 678" />
+            </div>
+            <div className="form-group">
+              <label>Email (Optional)</label>
               <input className="input" type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} placeholder="jane@school.ke" />
             </div>
             <div className="form-group">
@@ -184,8 +188,9 @@ export default function UserManagement() {
     const matchRole = roleFilter === 'all' || u.role === roleFilter;
     const name = (u.name || '').toLowerCase();
     const email = (u.email || '').toLowerCase();
+    const phone = (u.phoneNumber || u.phone || '').toLowerCase();
     const s = search.toLowerCase();
-    const matchSearch = name.includes(s) || email.includes(s);
+    const matchSearch = name.includes(s) || email.includes(s) || phone.includes(s);
     return matchRole && matchSearch;
   });
 
@@ -238,7 +243,7 @@ export default function UserManagement() {
             <input
               className="input"
               style={{ paddingLeft: 34 }}
-              placeholder="Search by name or email…"
+              placeholder="Search by name, phone, or email…"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -255,7 +260,7 @@ export default function UserManagement() {
             <thead>
               <tr>
                 <th>User</th>
-                <th>Email</th>
+                <th>Phone / Contact</th>
                 <th>Role</th>
                 <th>Grade</th>
                 <th>Status</th>
@@ -277,7 +282,16 @@ export default function UserManagement() {
                       <strong>{u.name || 'Unnamed User'}</strong>
                     </div>
                   </td>
-                  <td>{u.email || '—'}</td>
+                  <td>
+                    {u.phoneNumber ? (
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{u.phoneNumber}</div>
+                        {u.email && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>}
+                      </div>
+                    ) : (
+                      u.email || '—'
+                    )}
+                  </td>
                   <td>{roleBadge(u.role)}</td>
                   <td>{u.grade || '—'}</td>
                   <td>

@@ -7,11 +7,13 @@ export interface User {
     name: string;
     role: Role;
     id: string;
+    phoneNumber?: string;
+    email?: string;
 }
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string, password: string) => Promise<void>;
+    login: (identifier: string, password: string) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -21,9 +23,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
 
-    const login = async (email: string, password: string) => {
+    const login = async (identifier: string, password: string) => {
         try {
-            const payload: any = { email, password };
+            const trimmed = identifier.trim();
+            const payload: any = {
+                identifier: trimmed,
+                phoneNumber: trimmed,
+                email: trimmed,
+                password
+            };
             const data = await api.post<{ token: string; user?: User }>('/auth/login', payload);
             
             if (!data.user || !data.user.role) {

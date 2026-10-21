@@ -84,9 +84,11 @@ export function AdminProvider({ children }) {
   const addUser = async (user) => {
     try {
       let endpoint = '';
+      const phoneVal = user.phoneNumber || user.phone || '';
       const payload = {
         name: user.name,
-        email: user.email,
+        email: user.email || '',
+        phoneNumber: phoneVal,
         password: user.password || Math.random().toString(36).substring(2, 10)
       };
 
@@ -98,7 +100,7 @@ export function AdminProvider({ children }) {
         payload.studentIdNumber = user.studentId || '';
       } else if (user.role === 'parent') {
         endpoint = '/admin/parents';
-        payload.phoneNumber = user.phone || '';
+        payload.phoneNumber = phoneVal;
       } else {
         throw new Error(`Unsupported user role: ${user.role}`);
       }
@@ -108,13 +110,13 @@ export function AdminProvider({ children }) {
         id: res.teacher?.id || res.student?.id || res.parent?.id,
         userId: res.teacher?.userId || res.student?.userId || res.parent?.userId,
         name: user.name,
-        email: user.email,
+        email: user.email || '',
         role: user.role,
         createdAt: new Date().toISOString(),
         status: 'active',
         department: user.department,
         studentIdNumber: user.studentId,
-        phoneNumber: user.phone
+        phoneNumber: res.teacher?.phoneNumber || res.student?.phoneNumber || res.parent?.phoneNumber || phoneVal
       };
 
       setUsers(prev => [newUser, ...prev]);
