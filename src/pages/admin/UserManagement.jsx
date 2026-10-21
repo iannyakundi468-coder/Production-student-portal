@@ -180,10 +180,12 @@ export default function UserManagement() {
   const [confirm, setConfirm] = useState(null);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
 
-  const filtered = users.filter(u => {
+  const filtered = (users || []).filter(u => {
     const matchRole = roleFilter === 'all' || u.role === roleFilter;
-    const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
+    const name = (u.name || '').toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    const s = search.toLowerCase();
+    const matchSearch = name.includes(s) || email.includes(s);
     return matchRole && matchSearch;
   });
 
@@ -191,7 +193,8 @@ export default function UserManagement() {
     if (form.id) {
       updateUser(form.id, form);
     } else {
-      const initials = form.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const name = form.name?.trim() || 'Admin User';
+      const initials = name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'U';
       addUser({ ...form, avatar: initials });
     }
     setPanelUser(null);
@@ -268,19 +271,21 @@ export default function UserManagement() {
                 <tr key={u.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div className="admin-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>{u.avatar}</div>
-                      <strong>{u.name}</strong>
+                      <div className="admin-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>
+                        {u.avatar || (u.name ? u.name.slice(0, 2).toUpperCase() : 'U')}
+                      </div>
+                      <strong>{u.name || 'Unnamed User'}</strong>
                     </div>
                   </td>
-                  <td>{u.email}</td>
+                  <td>{u.email || '—'}</td>
                   <td>{roleBadge(u.role)}</td>
                   <td>{u.grade || '—'}</td>
                   <td>
                     <span className={`badge ${u.status === 'active' ? 'badge-green' : 'badge-gray'}`}>
-                      {u.status}
+                      {u.status || 'active'}
                     </span>
                   </td>
-                  <td>{u.joined}</td>
+                  <td>{u.joined || u.createdAt || '—'}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="btn btn-ghost btn-sm" onClick={() => setPanelUser(u)}>Edit</button>

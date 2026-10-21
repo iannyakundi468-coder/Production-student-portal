@@ -221,8 +221,9 @@ export function AdminProvider({ children }) {
 
       setClasses(prev => prev.map(c => {
         if (c.id !== classId) return c;
-        if (c.students.includes(studentId)) return c;
-        return { ...c, students: [...c.students, studentId] };
+        const currentStudents = Array.isArray(c.students) ? c.students : [];
+        if (currentStudents.includes(studentId)) return c;
+        return { ...c, students: [...currentStudents, studentId] };
       }));
 
       const student = users.find(u => u.id === studentId);
@@ -236,7 +237,7 @@ export function AdminProvider({ children }) {
 
   const removeStudent = (classId, studentId) => {
     setClasses(prev => prev.map(c =>
-      c.id === classId ? { ...c, students: c.students.filter(id => id !== studentId) } : c
+      c.id === classId ? { ...c, students: (Array.isArray(c.students) ? c.students : []).filter(id => id !== studentId) } : c
     ));
   };
 
@@ -301,14 +302,14 @@ export function AdminProvider({ children }) {
 
   // ── Derived metrics ───────────────────────────────────
   const metrics = {
-    totalStudents: users.filter(u => u.role === 'student').length,
-    totalTeachers: users.filter(u => u.role === 'teacher').length,
-    activeClasses: classes.filter(c => c.status === 'active').length,
-    pendingFees: payments.filter(p => p.status === 'overdue' || p.status === 'failed')
-      .reduce((sum, p) => sum + p.amount, 0),
-    totalCollected: payments.filter(p => p.status === 'successful')
-      .reduce((sum, p) => sum + p.amount, 0),
-    failedPayments: payments.filter(p => p.status === 'failed' || p.status === 'overdue').length,
+    totalStudents: (users || []).filter(u => u.role === 'student').length,
+    totalTeachers: (users || []).filter(u => u.role === 'teacher').length,
+    activeClasses: (classes || []).filter(c => c.status === 'active' || !c.status).length,
+    pendingFees: (payments || []).filter(p => p.status === 'overdue' || p.status === 'failed')
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0),
+    totalCollected: (payments || []).filter(p => p.status === 'successful')
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0),
+    failedPayments: (payments || []).filter(p => p.status === 'failed' || p.status === 'overdue').length,
   };
 
   const toggleDelegation = async (teacherProfileId, responsibility) => {

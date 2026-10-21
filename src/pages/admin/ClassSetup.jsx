@@ -42,8 +42,11 @@ export default function ClassSetup() {
     const studentId = enrollMap[classId];
     if (!studentId) return;
     const cls = classes.find(c => c.id === classId);
-    if (cls.students.includes(studentId)) return; // duplicate guard
-    if (cls.students.length >= cls.capacity) { alert('Class is full!'); return; }
+    if (!cls) return;
+    const clsStudents = Array.isArray(cls.students) ? cls.students : [];
+    const capacity = cls.capacity || 30;
+    if (clsStudents.includes(studentId)) return; // duplicate guard
+    if (clsStudents.length >= capacity) { alert('Class is full!'); return; }
     enrollStudent(classId, studentId);
     setEnrollMap(p => ({ ...p, [classId]: '' }));
   };
@@ -106,20 +109,22 @@ export default function ClassSetup() {
       )}
 
       {/* Classes list */}
-      {classes.map(cls => {
-        const enrolledStudents = students.filter(s => cls.students.includes(s.id));
-        const pct = Math.round((cls.students.length / cls.capacity) * 100);
+      {(classes || []).map(cls => {
+        const clsStudents = Array.isArray(cls.students) ? cls.students : [];
+        const capacity = cls.capacity || 30;
+        const enrolledStudents = students.filter(s => clsStudents.includes(s.id));
+        const pct = Math.min(100, Math.round((clsStudents.length / capacity) * 100));
         return (
           <div key={cls.id} className="card" style={{ marginBottom: 16 }}>
             <div className="card-header">
               <div>
                 <div className="card-title">{cls.name}</div>
-                <div className="card-subtitle">{cls.subject} · {cls.term} · Teacher: {cls.teacher}</div>
+                <div className="card-subtitle">{cls.subject || 'General'} · {cls.term || 'Term 2 2026'} · Teacher: {cls.teacher || 'Unassigned'}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span className={`badge ${cls.status === 'active' ? 'badge-green' : 'badge-gray'}`}>{cls.status}</span>
+                <span className={`badge ${cls.status === 'active' || !cls.status ? 'badge-green' : 'badge-gray'}`}>{cls.status || 'active'}</span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {cls.students.length}/{cls.capacity} enrolled
+                  {clsStudents.length}/{capacity} enrolled
                 </span>
                 <button
                   className="btn btn-ghost btn-sm"
@@ -161,7 +166,7 @@ export default function ClassSetup() {
               >
                 <option value="">Enroll a student…</option>
                 {students
-                  .filter(s => !cls.students.includes(s.id))
+                  .filter(s => !clsStudents.includes(s.id))
                   .map(s => <option key={s.id} value={s.id}>{s.name} ({s.grade})</option>)
                 }
               </select>

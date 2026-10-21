@@ -27,10 +27,10 @@ export default function Dashboard() {
   const { t, metrics, activity, auditLog, pushActivity, users } = useAdmin();
   const navigate = useNavigate();
 
-  const totalUsers = users.length || 1;
-  const numStudents = metrics.totalStudents;
-  const numParents = users.filter(u => u.role === 'parent' || u.role === 'guardian').length;
-  const numTeachers = metrics.totalTeachers;
+  const totalUsers = users?.length || 1;
+  const numStudents = metrics.totalStudents || 0;
+  const numParents = (users || []).filter(u => u.role === 'parent' || u.role === 'guardian').length;
+  const numTeachers = metrics.totalTeachers || 0;
   
   const pctStudents = Math.round((numStudents / totalUsers) * 100);
   const pctParents = Math.round((numParents / totalUsers) * 100);
@@ -67,7 +67,7 @@ export default function Dashboard() {
         />
         <MetricCard 
           label={t('pendingFees')} 
-          value={`KES ${metrics.pendingFees.toLocaleString()}`} 
+          value={`KES ${(metrics.pendingFees ?? 0).toLocaleString()}`} 
           icon={<AlertTriangle size={20} />} 
           colorClass="yellow" 
           onClick={() => navigate('/admin/finance')}
@@ -182,7 +182,9 @@ export default function Dashboard() {
                     <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{log.action}</p>
                     <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>User: <strong>{log.user}</strong></p>
                   </div>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>{log.time.split(' ')[1] || log.time}</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {(typeof log.time === 'string' && log.time.includes(' ') ? log.time.split(' ')[1] : log.time) || ''}
+                  </span>
                 </div>
               ))
             ) : (

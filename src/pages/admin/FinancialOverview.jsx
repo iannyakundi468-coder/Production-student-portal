@@ -45,7 +45,7 @@ function FeeStructuresTab() {
     setForm({ classId: '', term: 'Term 2 2026', breakdown: [{ name: '', cost: 0 }] });
   };
 
-  const getClassName = (id) => classes.find(c => c.id === id)?.name || id;
+  const getClassName = (id) => classes?.find(c => c.id === id)?.name || id;
 
   return (
     <div className="card">
@@ -77,10 +77,10 @@ function FeeStructuresTab() {
                 <tr key={f.id}>
                   <td><strong>{getClassName(f.classId)}</strong></td>
                   <td>{f.term}</td>
-                  <td><strong>KES {f.totalAmount?.toLocaleString()}</strong></td>
+                  <td><strong>KES {(f.totalAmount ?? 0).toLocaleString()}</strong></td>
                   <td style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                     {parsed.map((item, i) => (
-                      <div key={i}>{item.name}: {item.cost?.toLocaleString()}</div>
+                      <div key={i}>{item.name}: {(item.cost ?? 0).toLocaleString()}</div>
                     ))}
                   </td>
                 </tr>
@@ -103,7 +103,7 @@ function FeeStructuresTab() {
                   <label className="label" style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Class</label>
                   <select className="select" style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid var(--border)' }} value={form.classId} onChange={e => setForm({...form, classId: e.target.value})} required>
                     <option value="">-- Select Class --</option>
-                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {(classes || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -159,7 +159,7 @@ export default function FinancialOverview() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  const filtered = payments.filter(p => {
+  const filtered = (payments || []).filter(p => {
     const matchStatus = statusFilter === 'all' || p.status === statusFilter;
     const matchTerm = termFilter === 'all' || p.term === termFilter;
     const matchFrom = !dateFrom || p.date >= dateFrom;
@@ -197,15 +197,15 @@ export default function FinancialOverview() {
           <div className="summary-cards">
             <div className="summary-card">
               <div className="label">Total Collected</div>
-              <div className="value green">KES {metrics.totalCollected.toLocaleString()}</div>
+              <div className="value green">KES {(metrics.totalCollected ?? 0).toLocaleString()}</div>
             </div>
             <div className="summary-card">
               <div className="label">Outstanding / Overdue</div>
-              <div className="value red">KES {metrics.pendingFees.toLocaleString()}</div>
+              <div className="value red">KES {(metrics.pendingFees ?? 0).toLocaleString()}</div>
             </div>
             <div className="summary-card">
               <div className="label">Failed / Flagged Transactions</div>
-              <div className="value yellow">{metrics.failedPayments}</div>
+              <div className="value yellow">{metrics.failedPayments ?? 0}</div>
             </div>
           </div>
 

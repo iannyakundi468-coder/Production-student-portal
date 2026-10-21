@@ -54,8 +54,8 @@ function HomeRedirect() {
   }
 
   if (user.role === 'student') return <Navigate to="/student" replace />;
-  if (user.role === 'guardian') return <Navigate to="/parent" replace />;
-  if (user.role === 'staff') return <Navigate to="/teacher" replace />;
+  if (user.role === 'guardian' || user.role === 'parent') return <Navigate to="/parent" replace />;
+  if (user.role === 'staff' || user.role === 'teacher') return <Navigate to="/teacher" replace />;
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
 
   return <Navigate to="/login" replace />;

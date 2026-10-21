@@ -49,18 +49,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem('somobloom_user');
     };
 
-    // Load user from local storage
+    // Load user from URL handoff params or local storage
     React.useEffect(() => {
-        const storedUser = localStorage.getItem('somobloom_user');
-        const token = localStorage.getItem('somobloom_token');
-        if (storedUser && token) {
-            const parsedUser = JSON.parse(storedUser);
-            if (parsedUser.role === 'teacher') parsedUser.role = 'staff';
-            if (parsedUser.role === 'parent') parsedUser.role = 'guardian';
-            setUser(parsedUser);
-            
-            // Re-save normalized user back to storage to prevent issues on next load
-            localStorage.setItem('somobloom_user', JSON.stringify(parsedUser));
+        try {
+            let token = localStorage.getItem('somobloom_token');
+            let storedUser = localStorage.getItem('somobloom_user');
+
+            // Parse URL parameters or hash fragment for handoff from landing page
+            const searchParams = new URLSearchParams(window.location.search);
+            const hashString = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+            const hashParams = new URLSearchParams(hashString);
+
+            const handoffToken = searchParams.get('token') || hashParams.get('token');
+            const handoffUser = searchParams.get('user') || hashParams.get('user');
+
+            if (handoffToken) {
+                token = handoffToken;
+                localStorage.setItem('somobloom_token', handoffToken);
+            }
+            if (handoffUser) {
+                storedUser = handoffUser;
+                localStorage.setItem('somobloom_user', handoffUser);
+            }
+
+            if (handoffToken || handoffUser) {
+                // Clean tokens from browser URL history for security
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }
+
+            if (storedUser && token) {
+                const parsedUser = JSON.parse(storedUser);
+                if (parsedUser.role === 'teacher') parsedUser.role = 'staff';
+                if (parsedUser.role === 'parent') parsedUser.role = 'guardian';
+                setUser(parsedUser);
+                localStorage.setItem('somobloom_user', JSON.stringify(parsedUser));
+            }
+        } catch (e) {
+            console.error('Failed to parse auth user/token from storage or URL:', e);
         }
     }, []);
 
