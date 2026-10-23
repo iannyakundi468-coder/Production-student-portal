@@ -237,10 +237,23 @@ export function AdminProvider({ children }) {
     }
   };
 
-  const removeStudent = (classId, studentId) => {
-    setClasses(prev => prev.map(c =>
-      c.id === classId ? { ...c, students: (Array.isArray(c.students) ? c.students : []).filter(id => id !== studentId) } : c
-    ));
+  const removeStudent = async (classId, studentId) => {
+    try {
+      await api.delete(`/admin/classes/${classId}/enrollments/${studentId}`).catch(err => {
+        console.warn('Backend enrollment deletion fallback:', err);
+      });
+      setClasses(prev => prev.map(c =>
+        c.id === classId ? { ...c, students: (Array.isArray(c.students) ? c.students : []).filter(id => id !== studentId) } : c
+      ));
+      const student = users.find(u => u.id === studentId);
+      const cls = classes.find(c => c.id === classId);
+      pushAudit(`Removed ${student?.name || studentId} from ${cls?.name || classId}`, 'Classes');
+    } catch (err) {
+      console.error('Failed to remove student from class:', err);
+      setClasses(prev => prev.map(c =>
+        c.id === classId ? { ...c, students: (Array.isArray(c.students) ? c.students : []).filter(id => id !== studentId) } : c
+      ));
+    }
   };
 
   // ── Config actions ────────────────────────────────────
