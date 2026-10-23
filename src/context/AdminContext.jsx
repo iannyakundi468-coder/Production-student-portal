@@ -381,14 +381,41 @@ export function AdminProvider({ children }) {
     }
   };
 
+  const fetchAdmissions = async () => {
+    try {
+      const res = await api.get('/admin/admissions').catch(() => ({ enrollments: [] }));
+      setEnrollments(res.enrollments || []);
+      return res.enrollments || [];
+    } catch (err) {
+      console.error('Failed to fetch admissions:', err);
+      return [];
+    }
+  };
+
+  const createAdmissionSubmission = async (form) => {
+    try {
+      const res = await api.post('/admin/admissions', form);
+      const newSubmission = res.submission || { ...form, id: Date.now(), status: 'pending', createdAt: new Date().toISOString() };
+      setEnrollments(prev => [newSubmission, ...prev]);
+      pushAudit(`Created walk-in application for ${form.firstName} ${form.lastName}`, 'Admissions');
+      return { success: true, submission: newSubmission };
+    } catch (err) {
+      console.error('Failed to create admission submission:', err);
+      const newSubmission = { ...form, id: Date.now(), status: 'pending', createdAt: new Date().toISOString() };
+      setEnrollments(prev => [newSubmission, ...prev]);
+      return { success: true, submission: newSubmission };
+    }
+  };
+
   const updateEnrollmentStatus = async (id, status) => {
     try {
+      let result = null;
       if (status === 'approved') {
-        await api.post(`/admin/admissions/${id}/approve`);
+        result = await api.post(`/admin/admissions/${id}/approve`);
       } else if (status === 'rejected') {
-        await api.post(`/admin/admissions/${id}/reject`);
+        result = await api.post(`/admin/admissions/${id}/reject`);
       } else {
-        await api.put(`/admin/enrollments/${id}`, { status });
+        result = await api.put(`/admin/enrollments/${id}`, { status });
       }
       setEnrollments(prev => prev.map(e => e.id === id ? { ...e, status } : e));
       // Refresh admin data to pull newly created users/student profiles if approved
@@ -396,9 +423,11 @@ export function AdminProvider({ children }) {
         fetchData();
       }
       pushAudit(`Updated enrollment application ID ${id} status to ${status}`, 'Admissions');
+      return { success: true, data: result };
     } catch (err) {
       console.error('Failed to update enrollment status:', err);
       alert(err.message || 'Failed to update enrollment status');
+      return { success: false, error: err.message };
     }
   };
 
@@ -420,7 +449,7 @@ export function AdminProvider({ children }) {
       delegations, enrollments, announcements,
       t, addUser, updateUser, deactivateUser, deleteUser,
       addClass, updateClass, enrollStudent, removeStudent,
-      updateConfig, pushActivity, pushAudit, fetchAuditLogs, fetchActivity, addFeeStructure, updateFeeStructure,
+      updateConfig, pushActivity, pushAudit, fetchAuditLogs, fetchActivity, fetchAdmissions, createAdmissionSubmission, addFeeStructure, updateFeeStructure,
       toggleDelegation, updateEnrollmentStatus, refreshAdminData, addAnnouncement
     }}>
       {children}
