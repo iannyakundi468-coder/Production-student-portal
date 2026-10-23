@@ -260,7 +260,7 @@ export default function SystemSettings() {
                     System Audit Trail & Security Ledger
                   </div>
                   <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-                    Live, immutable record of administrative actions, user changes, settings modifications, and financial events.
+                    Live, immutable record of administrative actions, teacher grade & attendance updates, user modifications, and security events.
                   </div>
                 </div>
 
@@ -318,7 +318,7 @@ export default function SystemSettings() {
                   <input
                     type="text"
                     className="input"
-                    placeholder="Search logs by user, action description, keyword, or date..."
+                    placeholder="Search logs by teacher, student, action description, keyword, or date..."
                     value={auditSearch}
                     onChange={e => setAuditSearch(e.target.value)}
                     style={{ paddingLeft: 36, width: '100%', fontSize: 13 }}
@@ -338,7 +338,7 @@ export default function SystemSettings() {
                   <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 4 }}>
                     Category:
                   </span>
-                  {['All', 'Security', 'Users', 'Classes', 'Finance', 'Admissions', 'Settings', 'Academics', 'Timetable', 'Announcements'].map(cat => {
+                  {['All', 'Grading', 'Attendance', 'Security', 'Finance', 'Users', 'Classes', 'Admissions', 'Settings', 'Portfolio', 'Academics', 'Timetable', 'Announcements'].map(cat => {
                     const isSelected = auditCategory.toLowerCase() === cat.toLowerCase();
                     return (
                       <button
@@ -368,10 +368,14 @@ export default function SystemSettings() {
                     const categoryLower = (e.category || '').toLowerCase();
                     const badgeClass = 
                       categoryLower === 'security' ? 'badge-red' :
+                      categoryLower === 'grading' ? 'badge-red' :
+                      categoryLower === 'attendance' ? 'badge-blue' :
                       categoryLower === 'finance' ? 'badge-green' :
                       categoryLower === 'users' ? 'badge-blue' :
                       categoryLower === 'admissions' ? 'badge-purple' :
+                      categoryLower === 'portfolio' ? 'badge-purple' :
                       categoryLower === 'settings' ? 'badge-yellow' :
+                      categoryLower === 'academics' ? 'badge-green' :
                       'badge-gray';
 
                     return (
