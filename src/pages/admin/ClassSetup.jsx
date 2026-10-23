@@ -24,17 +24,17 @@ export default function ClassSetup() {
   const students = users.filter(u => u.role === 'student');
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: '', teacherId: '', term: 'Term 2 2026', subject: '', capacity: 30 });
+  const [form, setForm] = useState({ name: '', teacherId: '' });
   const [confirm, setConfirm] = useState(null);
   const [enrollMap, setEnrollMap] = useState({});
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   const handleAdd = () => {
-    if (!form.name || !form.teacherId) return;
+    if (!form.name.trim() || !form.teacherId) return;
     const teacher = teachers.find(t => t.id === form.teacherId);
-    addClass({ ...form, teacher: teacher?.name || '', capacity: Number(form.capacity) });
-    setForm({ name: '', teacherId: '', term: 'Term 2 2026', subject: '', capacity: 30 });
+    addClass({ name: form.name.trim(), teacherId: form.teacherId, teacher: teacher?.name || '' });
+    setForm({ name: '', teacherId: '' });
     setShowForm(false);
   };
 
@@ -44,9 +44,7 @@ export default function ClassSetup() {
     const cls = classes.find(c => c.id === classId);
     if (!cls) return;
     const clsStudents = Array.isArray(cls.students) ? cls.students : [];
-    const capacity = cls.capacity || 30;
     if (clsStudents.includes(studentId)) return; // duplicate guard
-    if (clsStudents.length >= capacity) { alert('Class is full!'); return; }
     enrollStudent(classId, studentId);
     setEnrollMap(p => ({ ...p, [classId]: '' }));
   };
@@ -77,54 +75,50 @@ export default function ClassSetup() {
       {showForm && (
         <div className="card" style={{ marginBottom: 20 }}>
           <div className="card-title" style={{ marginBottom: 16 }}>New Class</div>
-          <div className="form-row">
+          <div className="form-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
             <div className="form-group">
               <label>Class Name</label>
-              <input className="input" placeholder="Grade 4 – Morning" value={form.name} onChange={e => set('name', e.target.value)} />
+              <input
+                className="input"
+                placeholder="e.g. Grade 4 East or PP1"
+                value={form.name}
+                onChange={e => set('name', e.target.value)}
+              />
             </div>
             <div className="form-group">
-              <label>Subject</label>
-              <input className="input" placeholder="Mathematics" value={form.subject} onChange={e => set('subject', e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label>Teacher</label>
+              <label>Assigned Teacher</label>
               <select className="select" value={form.teacherId} onChange={e => set('teacherId', e.target.value)}>
                 <option value="">Select teacher…</option>
                 {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>
-            <div className="form-group">
-              <label>Term</label>
-              <select className="select" value={form.term} onChange={e => set('term', e.target.value)}>
-                {['Term 1 2026', 'Term 2 2026', 'Term 3 2026'].map(t => <option key={t}>{t}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Capacity</label>
-              <input className="input" type="number" min="1" value={form.capacity} onChange={e => set('capacity', e.target.value)} />
-            </div>
           </div>
-          <button className="btn btn-primary" style={{ marginTop: 14 }} onClick={handleAdd}>Create Class</button>
+          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <button className="btn btn-primary" onClick={handleAdd} disabled={!form.name.trim() || !form.teacherId}>
+              Create Class
+            </button>
+            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
       {/* Classes list */}
       {(classes || []).map(cls => {
         const clsStudents = Array.isArray(cls.students) ? cls.students : [];
-        const capacity = cls.capacity || 30;
         const enrolledStudents = students.filter(s => clsStudents.includes(s.id));
-        const pct = Math.min(100, Math.round((clsStudents.length / capacity) * 100));
         return (
           <div key={cls.id} className="card" style={{ marginBottom: 16 }}>
             <div className="card-header">
               <div>
                 <div className="card-title">{cls.name}</div>
-                <div className="card-subtitle">{cls.subject || 'General'} · {cls.term || 'Term 2 2026'} · Teacher: {cls.teacher || 'Unassigned'}</div>
+                <div className="card-subtitle">Assigned Teacher: {cls.teacher || 'Unassigned'}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span className={`badge ${cls.status === 'active' || !cls.status ? 'badge-green' : 'badge-gray'}`}>{cls.status || 'active'}</span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {clsStudents.length}/{capacity} enrolled
+                  {clsStudents.length} enrolled student{clsStudents.length === 1 ? '' : 's'}
                 </span>
                 <button
                   className="btn btn-ghost btn-sm"
@@ -132,13 +126,6 @@ export default function ClassSetup() {
                 >
                   {cls.status === 'active' ? 'Deactivate' : 'Activate'}
                 </button>
-              </div>
-            </div>
-
-            {/* Capacity bar */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ height: 4, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: pct > 85 ? 'var(--red)' : pct > 60 ? 'var(--yellow)' : 'var(--green)', transition: 'width 0.4s ease' }} />
               </div>
             </div>
 
