@@ -165,31 +165,43 @@ export default function Dashboard() {
           <div className="card-header">
             <div>
               <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Shield size={18} className="text-red-500" /> Security & System Audits</div>
-              <div className="card-subtitle">Recent administrative operations</div>
+              <div className="card-subtitle">Recent administrative operations & trail</div>
             </div>
             <button 
               className="btn btn-ghost btn-sm"
-              onClick={() => navigate('/admin/settings')}
+              onClick={() => navigate('/admin/settings?tab=audit')}
+              style={{ fontSize: '12px', fontWeight: 600 }}
             >
-              Configure
+              View All Audits →
             </button>
           </div>
           <div className="divide-y divide-slate-100 px-6 py-2">
             {auditLog && auditLog.length > 0 ? (
-              auditLog.slice(0, 4).map((log) => (
+              auditLog.slice(0, 5).map((log) => (
                 <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
-                  <div>
-                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{log.action}</p>
-                    <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>User: <strong>{log.user}</strong></p>
+                  <div style={{ maxWidth: '75%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                      <span className={`badge ${
+                        log.category === 'Security' ? 'badge-red' :
+                        log.category === 'Finance' ? 'badge-green' :
+                        log.category === 'Users' ? 'badge-blue' :
+                        log.category === 'Admissions' ? 'badge-purple' :
+                        'badge-gray'
+                      }`} style={{ fontSize: '10px', padding: '1px 6px', textTransform: 'uppercase' }}>
+                        {log.category || 'General'}
+                      </span>
+                      <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.action}</p>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>Performed by: <strong>{log.user}</strong></p>
                   </div>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                     {(typeof log.time === 'string' && log.time.includes(' ') ? log.time.split(' ')[1] : log.time) || ''}
                   </span>
                 </div>
               ))
             ) : (
               <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-                No audit entries recorded.
+                No audit entries recorded yet.
               </div>
             )}
           </div>

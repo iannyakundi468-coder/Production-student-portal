@@ -121,7 +121,7 @@ export function AdminProvider({ children }) {
 
       setUsers(prev => [newUser, ...prev]);
       pushActivity(currentAdmin?.name || 'Admin', 'added user', `${newUser.name} (${newUser.role})`);
-      pushAudit(`Added new user ${newUser.name} (${newUser.role})`);
+      pushAudit(`Added new user ${newUser.name} (${newUser.role})`, 'Users');
     } catch (err) {
       console.error('Failed to add user:', err);
       alert(err.message || 'Failed to add user');
@@ -139,7 +139,7 @@ export function AdminProvider({ children }) {
       });
 
       setUsers(prev => prev.map(u => u.id === id ? { ...u, ...patch } : u));
-      pushAudit(`Updated user ${patch.name || id}`);
+      pushAudit(`Updated user ${patch.name || id}`, 'Users');
     } catch (err) {
       console.error('Failed to update user:', err);
       alert(err.message || 'Failed to update user');
@@ -149,7 +149,7 @@ export function AdminProvider({ children }) {
   const deactivateUser = (id) => {
     const u = users.find(x => x.id === id);
     setUsers(prev => prev.map(x => x.id === id ? { ...x, status: x.status === 'active' ? 'inactive' : 'active' } : x));
-    pushAudit(`${u?.status === 'active' ? 'Deactivated' : 'Activated'} user ${u?.name}`);
+    pushAudit(`${u?.status === 'active' ? 'Deactivated' : 'Activated'} user ${u?.name || id}`, 'Users');
   };
 
   const deleteUser = async (id) => {
@@ -157,7 +157,7 @@ export function AdminProvider({ children }) {
       const u = users.find(x => x.id === id);
       await api.delete(`/admin/users/${id}`);
       setUsers(prev => prev.filter(x => x.id !== id));
-      pushAudit(`Deleted user ${u?.name}`);
+      pushAudit(`Deleted user ${u?.name || id}`, 'Users');
     } catch (err) {
       console.error('Failed to delete user:', err);
       alert(err.message || 'Failed to delete user');
@@ -182,7 +182,7 @@ export function AdminProvider({ children }) {
       };
 
       setClasses(prev => [newCls, ...prev]);
-      pushAudit(`Created class "${newCls.name}"`);
+      pushAudit(`Created class "${newCls.name}"`, 'Classes');
     } catch (err) {
       console.error('Failed to create class:', err);
       alert(err.message || 'Failed to create class');
@@ -208,7 +208,7 @@ export function AdminProvider({ children }) {
           teacher: teacherName
         };
       }));
-      pushAudit(`Updated class "${patch.name || id}"`);
+      pushAudit(`Updated class "${patch.name || id}"`, 'Classes');
     } catch (err) {
       console.error('Failed to update class:', err);
       alert(err.message || 'Failed to update class');
@@ -230,7 +230,7 @@ export function AdminProvider({ children }) {
 
       const student = users.find(u => u.id === studentId);
       const cls = classes.find(c => c.id === classId);
-      pushAudit(`Enrolled ${student?.name} in ${cls?.name}`);
+      pushAudit(`Enrolled ${student?.name} in ${cls?.name}`, 'Classes');
     } catch (err) {
       console.error('Failed to enroll student:', err);
       alert(err.message || 'Failed to enroll student');
@@ -252,7 +252,7 @@ export function AdminProvider({ children }) {
       else setConfig(newConfig);
       
       const key = Object.keys(patch)[0];
-      pushAudit(`Updated setting "${key}" to "${patch[key]}"`);
+      pushAudit(`Updated setting "${key}" to "${patch[key]}"`, 'Settings');
     } catch (err) {
       console.error('Failed to update config:', err);
       // Optimistic update fallback
@@ -268,13 +268,42 @@ export function AdminProvider({ children }) {
     ]);
   };
 
-  const pushAudit = (action) => {
+  const pushAudit = (action, category = 'General') => {
     const now = new Date();
     const time = `${now.toISOString().split('T')[0]} ${now.toTimeString().slice(0, 5)}`;
-    setAuditLog(prev => [
-      { id: `al${Date.now()}`, time, user: currentAdmin?.name || 'Admin', action, category: 'General' },
-      ...prev.slice(0, 19)
-    ]);
+    const newEntry = {
+      id: `al${Date.now()}`,
+      time,
+      user: currentAdmin?.name || 'Administrator',
+      action,
+      category
+    };
+    setAuditLog(prev => [newEntry, ...prev.slice(0, 99)]);
+
+    // Persist to backend database
+    api.post('/admin/audit', { action, category }).catch(err => {
+      console.warn('Failed to persist audit log to backend:', err);
+    });
+  };
+
+  const fetchAuditLogs = async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.category && filters.category !== 'All') params.set('category', filters.category);
+      if (filters.search) params.set('search', filters.search);
+      if (filters.limit) params.set('limit', filters.limit);
+
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      const res = await api.get(`/admin/audit${qs}`);
+      if (res && res.auditLog) {
+        setAuditLog(res.auditLog);
+        return res.auditLog;
+      }
+      return [];
+    } catch (err) {
+      console.error('Failed to query audit logs:', err);
+      return [];
+    }
   };
 
   // ── Fee Structure Actions ─────────────────────────────
@@ -283,7 +312,7 @@ export function AdminProvider({ children }) {
       const res = await api.post('/admin/fees/structures', structure);
       if (res.feeStructure) {
         setFeeStructures(prev => [...prev, res.feeStructure]);
-        pushAudit(`Created fee structure for term ${structure.term}`);
+        pushAudit(`Created fee structure for term ${structure.term}`, 'Finance');
       }
     } catch (err) {
       console.error('Failed to create fee structure:', err);
@@ -295,7 +324,7 @@ export function AdminProvider({ children }) {
       const res = await api.put(`/admin/fees/structures/${id}`, structure);
       if (res.feeStructure) {
         setFeeStructures(prev => prev.map(f => f.id === id ? res.feeStructure : f));
-        pushAudit(`Updated fee structure for term ${structure.term}`);
+        pushAudit(`Updated fee structure for term ${structure.term}`, 'Finance');
       }
     } catch (err) {
       console.error('Failed to update fee structure:', err);
@@ -318,7 +347,7 @@ export function AdminProvider({ children }) {
     try {
       const res = await api.post('/admin/delegations/toggle', { teacherProfileId, responsibility });
       setDelegations(res.delegations || []);
-      pushAudit(`Toggled ${responsibility} delegation for teacher ID ${teacherProfileId}`);
+      pushAudit(`Toggled ${responsibility} delegation for teacher ID ${teacherProfileId}`, 'Security');
     } catch (err) {
       console.error('Failed to toggle delegation:', err);
       alert(err.message || 'Failed to toggle delegation');
@@ -339,7 +368,7 @@ export function AdminProvider({ children }) {
       if (status === 'approved') {
         fetchData();
       }
-      pushAudit(`Updated enrollment application ID ${id} status to ${status}`);
+      pushAudit(`Updated enrollment application ID ${id} status to ${status}`, 'Admissions');
     } catch (err) {
       console.error('Failed to update enrollment status:', err);
       alert(err.message || 'Failed to update enrollment status');
@@ -351,7 +380,7 @@ export function AdminProvider({ children }) {
       await api.post('/admin/announcements', announcement);
       const listRes = await api.get('/admin/announcements').catch(() => ({ announcements: [] }));
       setAnnouncements(listRes.announcements || []);
-      pushAudit(`Created announcement: ${announcement.title}`);
+      pushAudit(`Created announcement: ${announcement.title}`, 'Announcements');
     } catch (err) {
       console.error('Failed to create announcement:', err);
       alert(err.message || 'Failed to create announcement');
@@ -364,7 +393,7 @@ export function AdminProvider({ children }) {
       delegations, enrollments, announcements,
       t, addUser, updateUser, deactivateUser, deleteUser,
       addClass, updateClass, enrollStudent, removeStudent,
-      updateConfig, pushActivity, addFeeStructure, updateFeeStructure,
+      updateConfig, pushActivity, pushAudit, fetchAuditLogs, addFeeStructure, updateFeeStructure,
       toggleDelegation, updateEnrollmentStatus, refreshAdminData, addAnnouncement
     }}>
       {children}

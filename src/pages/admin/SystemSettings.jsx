@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAdmin } from '../../context/AdminContext';
-import { Globe, Gamepad2, Bell, Lock, Database, ClipboardList, Settings as SettingsIcon, AlertTriangle, Users } from 'lucide-react';
+import { Globe, Gamepad2, Bell, Lock, Database, ClipboardList, Settings as SettingsIcon, AlertTriangle, Users, Search, Download, RefreshCw, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 const SECTIONS = [
   { id: 'general', label: 'General', icon: <Globe size={18} /> },
@@ -28,8 +29,62 @@ function SettingRow({ label, desc, children }) {
 }
 
 export default function SystemSettings() {
-  const { config, updateConfig, auditLog, users, delegations, toggleDelegation } = useAdmin();
-  const [active, setActive] = useState('general');
+  const { config, updateConfig, auditLog, fetchAuditLogs, users, delegations, toggleDelegation } = useAdmin();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [active, setActive] = useState(tabParam || 'general');
+
+  const [auditCategory, setAuditCategory] = useState('All');
+  const [auditSearch, setAuditSearch] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (tabParam && tabParam !== active) {
+      setActive(tabParam);
+    }
+  }, [tabParam]);
+
+  const handleNavClick = (id) => {
+    setActive(id);
+    setSearchParams({ tab: id });
+  };
+
+  const handleRefreshAudit = async () => {
+    setIsRefreshing(true);
+    if (fetchAuditLogs) {
+      await fetchAuditLogs({ category: auditCategory, search: auditSearch });
+    }
+    setIsRefreshing(false);
+  };
+
+  const filteredAuditLogs = (auditLog || []).filter(item => {
+    const matchesCategory = auditCategory === 'All' || (item.category || '').toLowerCase() === auditCategory.toLowerCase();
+    const query = auditSearch.trim().toLowerCase();
+    const matchesSearch = !query || 
+      (item.action || '').toLowerCase().includes(query) ||
+      (item.user || '').toLowerCase().includes(query) ||
+      (item.category || '').toLowerCase().includes(query) ||
+      (item.time || '').toLowerCase().includes(query);
+    return matchesCategory && matchesSearch;
+  });
+
+  const exportAuditCSV = () => {
+    const headers = ['Timestamp', 'Category', 'User', 'Action'];
+    const rows = filteredAuditLogs.map(l => [
+      `"${(l.time || '').replace(/"/g, '""')}"`,
+      `"${(l.category || 'General').replace(/"/g, '""')}"`,
+      `"${(l.user || '').replace(/"/g, '""')}"`,
+      `"${(l.action || '').replace(/"/g, '""')}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `somobloom_audit_trail_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
 
   return (
@@ -43,7 +98,7 @@ export default function SystemSettings() {
         {/* Nav */}
         <div className="settings-nav">
           {SECTIONS.map(s => (
-            <div key={s.id} className={`settings-nav-item ${active === s.id ? 'active' : ''}`} onClick={() => setActive(s.id)}>
+            <div key={s.id} className={`settings-nav-item ${active === s.id ? 'active' : ''}`} onClick={() => handleNavClick(s.id)}>
               <span style={{ display: 'flex', alignItems: 'center' }}>{s.icon}</span> {s.label}
             </div>
           ))}
@@ -196,18 +251,177 @@ export default function SystemSettings() {
           )}
 
           {active === 'audit' && (
-            <>
-              <div className="card-title" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}><ClipboardList size={18} /> Audit Log</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>Showing last {auditLog.length} actions. Read-only.</div>
-              {auditLog.map(e => (
-                <div key={e.id} className="audit-item">
-                  <div className="audit-time">{e.time}</div>
-                  <div className="audit-action"><strong>{e.user}</strong> — {e.action}</div>
-                  <span className="badge badge-gray">{e.category}</span>
+            <div>
+              {/* Header with Title and Actions */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+                <div>
+                  <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ClipboardList size={20} className="text-indigo-600" />
+                    System Audit Trail & Security Ledger
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Live, immutable record of administrative actions, user changes, settings modifications, and financial events.
+                  </div>
                 </div>
-              ))}
-              {auditLog.length === 0 && <div className="empty"><p>No audit entries yet.</p></div>}
-            </>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleRefreshAudit}
+                    disabled={isRefreshing}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
+                  >
+                    <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
+                    {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                  </button>
+
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={exportAuditCSV}
+                    disabled={filteredAuditLogs.length === 0}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
+                  >
+                    <Download size={13} />
+                    Export CSV
+                  </button>
+                </div>
+              </div>
+
+              {/* Status & Integrity Banner */}
+              <div style={{
+                background: 'rgba(99, 102, 241, 0.05)',
+                border: '1px solid rgba(99, 102, 241, 0.2)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '10px 14px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 8,
+                marginBottom: 16,
+                fontSize: 12
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-main)' }}>
+                  <ShieldCheck size={16} className="text-emerald-500" />
+                  <span style={{ fontWeight: 600 }}>Immutable Ledger Active:</span>
+                  <span style={{ color: 'var(--text-muted)' }}>School ID: {config.schoolId || 'Primary School'}</span>
+                </div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                  Showing <strong>{filteredAuditLogs.length}</strong> of <strong>{auditLog.length}</strong> events
+                </div>
+              </div>
+
+              {/* Search & Filter Toolbar */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="Search logs by user, action description, keyword, or date..."
+                    value={auditSearch}
+                    onChange={e => setAuditSearch(e.target.value)}
+                    style={{ paddingLeft: 36, width: '100%', fontSize: 13 }}
+                  />
+                  {auditSearch && (
+                    <button
+                      onClick={() => setAuditSearch('')}
+                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* Category Pills */}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 4 }}>
+                    Category:
+                  </span>
+                  {['All', 'Security', 'Users', 'Classes', 'Finance', 'Admissions', 'Settings', 'Academics', 'Timetable', 'Announcements'].map(cat => {
+                    const isSelected = auditCategory.toLowerCase() === cat.toLowerCase();
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setAuditCategory(cat)}
+                        className={`badge ${isSelected ? 'badge-blue' : 'badge-gray'}`}
+                        style={{
+                          cursor: 'pointer',
+                          padding: '4px 10px',
+                          fontSize: 11,
+                          fontWeight: isSelected ? 700 : 500,
+                          border: isSelected ? '1px solid var(--blue)' : '1px solid transparent',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Audit Entries List */}
+              <div className="audit-list" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+                {filteredAuditLogs.length > 0 ? (
+                  filteredAuditLogs.map((e, index) => {
+                    const categoryLower = (e.category || '').toLowerCase();
+                    const badgeClass = 
+                      categoryLower === 'security' ? 'badge-red' :
+                      categoryLower === 'finance' ? 'badge-green' :
+                      categoryLower === 'users' ? 'badge-blue' :
+                      categoryLower === 'admissions' ? 'badge-purple' :
+                      categoryLower === 'settings' ? 'badge-yellow' :
+                      'badge-gray';
+
+                    return (
+                      <div
+                        key={e.id || index}
+                        className="audit-item"
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '140px 100px 1fr',
+                          gap: 12,
+                          alignItems: 'center',
+                          padding: '12px 16px',
+                          borderBottom: index === filteredAuditLogs.length - 1 ? 'none' : '1px solid var(--border)',
+                          background: index % 2 === 0 ? 'var(--bg-card)' : 'transparent'
+                        }}
+                      >
+                        <div className="audit-time" style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                          {e.time}
+                        </div>
+
+                        <div>
+                          <span className={`badge ${badgeClass}`} style={{ fontSize: 10, padding: '2px 8px', textTransform: 'uppercase' }}>
+                            {e.category || 'General'}
+                          </span>
+                        </div>
+
+                        <div className="audit-action" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                          <strong style={{ color: 'var(--text-primary)' }}>{e.user}</strong> — {e.action}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <ClipboardList size={32} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>No audit log entries match your criteria</p>
+                    <p style={{ margin: '4px 0 0', fontSize: 12 }}>Try adjusting your search query or selecting "All" categories.</p>
+                    {(auditSearch || auditCategory !== 'All') && (
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => { setAuditSearch(''); setAuditCategory('All'); }}
+                        style={{ marginTop: 12, fontSize: 12 }}
+                      >
+                        Reset Filters
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>
