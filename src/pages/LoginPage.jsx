@@ -95,12 +95,9 @@ export default function LoginPage() {
 
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between pl-1">
-                    <label className="text-xs font-bold text-slate-500 flex items-center gap-2 uppercase tracking-wider">
-                      <Phone size={13} className="text-indigo-600" /> Phone Number <span className="text-slate-400 font-normal lowercase">(or email)</span>
-                    </label>
-                    <span className="text-[11px] font-medium text-slate-400">Kenya (+254)</span>
-                  </div>
+                  <label className="text-xs font-bold text-slate-500 flex items-center gap-2 uppercase tracking-wider pl-1">
+                    <Phone size={13} className="text-indigo-600" /> Phone Number <span className="text-slate-400 font-normal lowercase">(or email)</span>
+                  </label>
                   <input
                     required
                     name="identifier"
@@ -111,9 +108,6 @@ export default function LoginPage() {
                     placeholder="e.g. 0712 345 678 or name@school.ac.ke"
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200/80 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-semibold placeholder:text-slate-400 text-slate-900"
                   />
-                  <p className="text-[11px] text-slate-400 pl-1">
-                    Supports Safaricom, Airtel, Telkom (e.g. 07..., 01..., or +254...)
-                  </p>
                 </div>
 
                 <div className="space-y-1.5">
