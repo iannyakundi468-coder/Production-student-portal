@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAdmin } from '../../context/AdminContext';
 import { AlertTriangle, X, Users, Search, Upload } from 'lucide-react';
 
@@ -178,11 +179,19 @@ function BulkUploadModal({ onClose, addUser }) {
 
 export default function UserManagement() {
   const { users, addUser, updateUser, deactivateUser, deleteUser } = useAdmin();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const roleParam = searchParams.get('role');
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState(roleParam || 'all');
   const [panelUser, setPanelUser] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+
+  useEffect(() => {
+    if (roleParam && roleParam !== roleFilter) {
+      setRoleFilter(roleParam);
+    }
+  }, [roleParam]);
 
   const filtered = (users || []).filter(u => {
     const matchRole = roleFilter === 'all' || u.role === roleFilter;

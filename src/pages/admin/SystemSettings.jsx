@@ -32,9 +32,10 @@ export default function SystemSettings() {
   const { config, updateConfig, auditLog, fetchAuditLogs, users, delegations, toggleDelegation } = useAdmin();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
+  const categoryParam = searchParams.get('category');
   const [active, setActive] = useState(tabParam || 'general');
 
-  const [auditCategory, setAuditCategory] = useState('All');
+  const [auditCategory, setAuditCategory] = useState(categoryParam || 'All');
   const [auditSearch, setAuditSearch] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -43,6 +44,12 @@ export default function SystemSettings() {
       setActive(tabParam);
     }
   }, [tabParam]);
+
+  useEffect(() => {
+    if (categoryParam && categoryParam !== auditCategory) {
+      setAuditCategory(categoryParam);
+    }
+  }, [categoryParam]);
 
   const handleNavClick = (id) => {
     setActive(id);
