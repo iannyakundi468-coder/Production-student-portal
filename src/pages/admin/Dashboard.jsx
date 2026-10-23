@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Presentation, AlertTriangle, BookOpen, Shield, ClipboardList, RefreshCw } from 'lucide-react';
@@ -24,8 +24,22 @@ function MetricCard({ label, value, icon, colorClass, change, onClick }) {
 }
 
 export default function Dashboard() {
-  const { t, metrics, activity, auditLog, pushActivity, users } = useAdmin();
+  const { t, metrics, activity, auditLog, fetchActivity, refreshAdminData, users } = useAdmin();
+  const [isRefreshingActivity, setIsRefreshingActivity] = useState(false);
   const navigate = useNavigate();
+
+  const handleRefreshActivity = async () => {
+    setIsRefreshingActivity(true);
+    try {
+      if (fetchActivity) {
+        await fetchActivity();
+      } else if (refreshAdminData) {
+        await refreshAdminData();
+      }
+    } finally {
+      setIsRefreshingActivity(false);
+    }
+  };
 
   const totalUsers = users?.length || 1;
   const numStudents = metrics.totalStudents || 0;
@@ -183,9 +197,12 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                       <span className={`badge ${
                         log.category === 'Security' ? 'badge-red' :
+                        log.category === 'Grading' ? 'badge-red' :
                         log.category === 'Finance' ? 'badge-green' :
+                        log.category === 'Attendance' ? 'badge-blue' :
                         log.category === 'Users' ? 'badge-blue' :
                         log.category === 'Admissions' ? 'badge-purple' :
+                        log.category === 'Portfolio' ? 'badge-purple' :
                         'badge-gray'
                       }`} style={{ fontSize: '10px', padding: '1px 6px', textTransform: 'uppercase' }}>
                         {log.category || 'General'}
@@ -216,10 +233,12 @@ export default function Dashboard() {
             </div>
             <button
               className="btn btn-ghost btn-sm"
-              onClick={() => pushActivity('Admin Super', 'viewed dashboard', '')}
-              style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+              onClick={handleRefreshActivity}
+              disabled={isRefreshingActivity}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
             >
-              <RefreshCw size={12} /> Refresh
+              <RefreshCw size={12} className={isRefreshingActivity ? 'animate-spin' : ''} />
+              {isRefreshingActivity ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
           <div className="activity-list">

@@ -306,6 +306,20 @@ export function AdminProvider({ children }) {
     }
   };
 
+  const fetchActivity = async () => {
+    try {
+      const res = await api.get('/admin/activity').catch(() => ({ activity: [] }));
+      if (res && res.activity) {
+        setActivity(res.activity);
+        return res.activity;
+      }
+      return [];
+    } catch (err) {
+      console.error('Failed to query activity logs:', err);
+      return [];
+    }
+  };
+
   // ── Fee Structure Actions ─────────────────────────────
   const addFeeStructure = async (structure) => {
     try {
@@ -393,7 +407,7 @@ export function AdminProvider({ children }) {
       delegations, enrollments, announcements,
       t, addUser, updateUser, deactivateUser, deleteUser,
       addClass, updateClass, enrollStudent, removeStudent,
-      updateConfig, pushActivity, pushAudit, fetchAuditLogs, addFeeStructure, updateFeeStructure,
+      updateConfig, pushActivity, pushAudit, fetchAuditLogs, fetchActivity, addFeeStructure, updateFeeStructure,
       toggleDelegation, updateEnrollmentStatus, refreshAdminData, addAnnouncement
     }}>
       {children}
